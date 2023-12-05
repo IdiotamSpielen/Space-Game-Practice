@@ -330,7 +330,8 @@
 
         }
 
-        //BUG Sometimes it is possible to give off two shots in quick succession.
+        //BUG in rare cases it is possible to give off two shots in quick succession.
+        //This is probably due to interval rates.
         function shoot(){
             if(KEY_SPACE && hasFired == false){
                 hasFired = true;
@@ -346,7 +347,7 @@
                 shots.push(shot);
             }
         }
-
+        
         function refillAmmo(){
             hasFired = false;
         }
