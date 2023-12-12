@@ -347,88 +347,51 @@
         }
 
         //All the stuff that makes the enemies appear
-        function createEnemies1(){
-            if(bossSpawned != true){
-                let enemy1 = {
-                    x: 900,
-                    y: Math.random() * 400,
-                    width: 100,
-                    height: 50,
-                    src: 'img/EnemySpaceship1.png',
-                    img: new Image(),
-                    hit: false
-                }
-                enemy1.img.src = enemy1.src;
-                enemies1.push(enemy1);
+        function createEnemy(x, y, width, height, src, array, additionalproperties = {}) {
+            let enemy = {
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                src: src,
+                img: new Image(),
+                hit: false,
+                ...additionalproperties
+            }
+            enemy.img.src = enemy.src;
+            array.push(enemy);
+        }
+
+        function createEnemies1() {
+            if (bossSpawned != true) {
+                createEnemy(900, Math.random() * 400, 100, 50, 'img/EnemySpaceship1.png', enemies1);
             }
         }
-        function createEnemies2(){
-            if (playtime >= 300 && bossSpawned != true){
-                let enemy2 = {
-                    x: 900,
-                    y: Math.random() * 400,
-                    width: 50,
-                    height: 30,
-                    src: 'img/EnemySpaceship2.png',
-                    img: new Image(),
-                    hit: false
-                }
-                enemy2.img.src = enemy2.src;
-                enemies2.push(enemy2);
+
+        function createEnemies2() {
+            if (playtime >= 300 && bossSpawned != true) {
+                createEnemy(900, Math.random() * 400, 50, 30, 'img/EnemySpaceship2.png', enemies2);
             }
         }
-        function createEnemies3(){
-            if(playtime >= 600 && enemies3.length < 2 && bossSpawned != true){
-                let enemy3 = {
-                    x: 900,
-                    y: Math.random() * 400,
-                    width: 100,
-                    height: 50,
-                    src: 'img/EnemySpaceship3.png',
-                    img: new Image(),
-                    age: 0,
-                    hit: false,
-                    direction: null
-                }
-                enemy3.img.src = enemy3.src;
-                enemies3.push(enemy3)
+
+        function createEnemies3() {
+            if (playtime >= 600 && enemies3.length < 2 && bossSpawned != true) {
+                createEnemy(900, Math.random() * 400, 100, 50, 'img/EnemySpaceship3.png', enemies3, { age: 0, direction: null });
             }
         }
-        function spawnBoss(){
-            if(playtime >= 1000 && bossSpawns < 1){
-                let boss = {
-                    x: 900,
-                    y: 200,
-                    width: 100,
-                    height: 75,
-                    src: 'img/Boss.png',
-                    img: new Image(),
-                    bossHits: 0,
-                    direction: null
-                }
-                boss.img.src = boss.src;
-                bosses.push(boss)
-                bossSpawns++;
-                timeSinceLastBoss = 0;
+        
+        function spawnBoss() {
+            if (playtime >= 1000 && bossSpawns < 1) {
+                createEnemy(900, 200, 100, 75, 'img/Boss.png', bosses, { bossHits: 0, direction: null });
                 setInterval(createEnemies1, 3000);
                 setInterval(createEnemies2, 2000);
                 setInterval(createEnemies3, 1000);
+            } else if (playtime >= 1000 && timeSinceLastBoss >= 1000 && bosses.length < 1) {
+                createEnemy(900, 200, 100, 75, 'img/Boss.png', bosses, { bossHits: 0, direction: null });
+
             }
-            else if(playtime >= 1000 && timeSinceLastBoss >= 1000 && bosses.length < 1){
-                let boss = {
-                    x: 900,
-                    y: 200,
-                    width: 100,
-                    height: 75,
-                    src: 'img/Boss.png',
-                    img: new Image(),
-                    bossHits: 0
-                }
-                boss.img.src = boss.src;
-                bosses.push(boss);
-                bossSpawns++
-                timeSinceLastBoss = 0;
-            }
+            bossSpawns++;
+            timeSinceLastBoss = 0;
         }
 
         //Logic for enemy attacks
