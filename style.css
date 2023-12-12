@@ -1,0 +1,8 @@
+#canvas {
+    width: 855;
+    height: 480;
+}
+
+#score {
+    display: flex;
+}
