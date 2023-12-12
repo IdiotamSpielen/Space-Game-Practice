@@ -9,10 +9,6 @@
         let hasFired = false;
         let lost = false;
         let score = 0;
-        
-        //Logic variables for behavior of enemy 3
-        var placeholder;
-        var initial;
 
         //Logic variables for bosses
         var bossHits;
@@ -26,7 +22,7 @@
         let player = {
             x: 50,
             y: 200,
-            width: 100,
+            width: 75,
             height: 50,
             src: 'img/PlayerSpaceship.png'
         }
@@ -56,7 +52,7 @@
             }
         }
 
-        //Sets variables false if buttons are let go
+        //Button-Logic... Yes this is deprecated. Deal with it!
         document.onkeyup = function(e){
             if(e.keyCode == 32){
                 KEY_SPACE = false;
@@ -104,7 +100,7 @@
             }
 
             document.getElementById("score").innerHTML = "Score: " + score;
-            
+            //boss-behaviour
             bosses.forEach(function(boss){
                 if(boss.x + boss.width > 810){
                     boss.x -= 6;
@@ -113,16 +109,16 @@
                 else if(boss.x + boss.width <= 810){
                     if(boss.y <= 40){
                         boss.y += 5;
-                        boss.placeholder = true;
+                        boss.direction = true;
                     }
                     else if(boss.y >= 380){
                         boss.y -= 5;
-                        boss.placeholder = false;
+                        boss.direction = false;
                     }
-                    else if (boss.placeholder && boss.y < 380){
+                    else if (boss.direction && boss.y < 380){
                         boss.y += 5;
                     }
-                    else if(!boss.placeholder && boss.y > 40){
+                    else if(!boss.direction && boss.y > 40){
                         boss.y -= 5;
                     }
                 }
@@ -137,7 +133,7 @@
                     }, 500);
                 }
             })
-
+            //Behaviour of first enemy
             enemies1.forEach(function(enemy1){
                 if(!enemy1.hit){
                 enemy1.x -= 6;}
@@ -145,7 +141,7 @@
                     enemies1 = enemies1.filter(u => u != enemy1);
                 }
             })
-
+            //Behaviour of second enemy
             enemies2.forEach(function(enemy2){
                 if(!enemy2.hit){
                     var zigzag = Math.random() < 0.5;
@@ -161,21 +157,23 @@
                     enemies2 = enemies2.filter(u => u != enemy2);
                 }
             })
-            
+            //behaviour of third enemy
             enemies3.forEach(function(enemy3){
                 if(!enemy3.hit){
-                    if (enemy3.age < 200){
+                    if(bossSpawned == true){
+                        enemy3.x -= 6;
+                    }
+                    else if (enemy3.age < 200){
                         if (enemy3.x + enemy3.width > 810){
                         enemy3.x -= 6;}
                         if(enemy3.x + enemy3.width <= 810){
                             if (enemy3.age < 3){
-                                initial = Math.random() < 0.5;
-                                enemy3.placeholder = initial;
+                                enemy3.direction = Math.random() < 0.5;
                                     if(enemy3.x == 820){
-                                    if (enemy3.placeholder && enemy3.y < 380){
+                                    if (enemy3.direction && enemy3.y < 380){
                                         enemy3.y += 3;
                                     }
-                                    else if(!enemy3.placeholder &&  enemy3.y > 40){
+                                    else if(!enemy3.direction &&  enemy3.y > 40){
                                         enemy3.y -= 3;
                                     }
                                 }
@@ -184,16 +182,16 @@
                             else if(enemy3.age >= 3){
                                     if(enemy3.y <= 40){
                                         enemy3.y += 3;
-                                        enemy3.placeholder = true;
+                                        enemy3.direction = true;
                                     }
                                     else if(enemy3.y >= 380){
                                         enemy3.y -= 3;
-                                        enemy3.placeholder = false;
+                                        enemy3.direction = false;
                                     }
-                                    else if (enemy3.placeholder && enemy3.y < 380){
+                                    else if (enemy3.direction && enemy3.y < 380){
                                         enemy3.y += 3;
                                     }
-                                    else if(!enemy3.placeholder && enemy3.y > 40){
+                                    else if(!enemy3.direction && enemy3.y > 40){
                                         enemy3.y -= 3;
                                     }
                                     enemy3.age++;    
@@ -201,9 +199,6 @@
                         }
                     }
                     else if (enemy3.age >= 200){
-                        enemy3.x -= 6;
-                    }
-                    else if(bossSpawned = true){
                         enemy3.x -= 6;
                     }
                 }
@@ -373,7 +368,7 @@
                 let enemy2 = {
                     x: 900,
                     y: Math.random() * 400,
-                    width: 25,
+                    width: 50,
                     height: 30,
                     src: 'img/EnemySpaceship2.png',
                     img: new Image(),
@@ -393,7 +388,8 @@
                     src: 'img/EnemySpaceship3.png',
                     img: new Image(),
                     age: 0,
-                    hit: false
+                    hit: false,
+                    direction: null
                 }
                 enemy3.img.src = enemy3.src;
                 enemies3.push(enemy3)
@@ -408,7 +404,8 @@
                     height: 75,
                     src: 'img/Boss.png',
                     img: new Image(),
-                    bossHits: 0
+                    bossHits: 0,
+                    direction: null
                 }
                 boss.img.src = boss.src;
                 bosses.push(boss)
