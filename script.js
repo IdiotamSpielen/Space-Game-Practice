@@ -38,34 +38,33 @@
         let age = 0; //Time that an enemy survived on screen
         
         //Button-Logic... Yes this is deprecated. Deal with it!
-        document.onkeydown = function(e){
-            if(e.keyCode == 32){
-                KEY_SPACE = true;
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case ' ': // Space
+                    KEY_SPACE = true;
+                    break;
+                case 'ArrowUp': // Up
+                    KEY_UP = true;
+                    break;
+                case 'ArrowDown': // Down
+                    KEY_DOWN = true;
+                    break;
             }
-
-            if(e.keyCode == 38){
-                KEY_UP = true;
+        });
+        
+        document.addEventListener('keyup', function(e) {
+            switch(e.key) {
+                case ' ': // Space
+                    KEY_SPACE = false;
+                    break;
+                case 'ArrowUp': // Up
+                    KEY_UP = false;
+                    break;
+                case 'ArrowDown': // Down
+                    KEY_DOWN = false;
+                    break;
             }
-
-            if(e.keyCode == 40){
-                KEY_DOWN = true;
-            }
-        }
-
-        //Button-Logic... Yes this is deprecated. Deal with it!
-        document.onkeyup = function(e){
-            if(e.keyCode == 32){
-                KEY_SPACE = false;
-            }
-
-            if(e.keyCode == 38){
-                KEY_UP = false;
-            }
-
-            if(e.keyCode == 40){
-                KEY_DOWN = false;
-            }
-        }
+        });
 
         //the core of all of this. Be very careful when editing
         function startGame(){
