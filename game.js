@@ -36,8 +36,8 @@
         let bosses = [];
         let playtime = 0; //Time the player survived
         let age = 0; //Time that an enemy survived on screen
-
-        //Sets variables true if buttons are pressed 
+        
+        //Button-Logic... Yes this is deprecated. Deal with it!
         document.onkeydown = function(e){
             if(e.keyCode == 32){
                 KEY_SPACE = true;
@@ -86,7 +86,7 @@
             draw();
         }
 
-        //Game updates at 30 FPS, can we bump this up to 60?
+        //Game updates at 30 FPS
         function update(){
             playtime++;
             if(KEY_DOWN && player.y <= 380){
@@ -432,6 +432,7 @@
             }
         }
 
+        //Logic for enemy attacks
         function enemyShoots(){
             if(bossSpawned != true){
                 enemies3.forEach(function(enemy3){
