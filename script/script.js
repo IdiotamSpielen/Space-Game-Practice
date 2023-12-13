@@ -69,6 +69,7 @@
         //the core of all of this. Be very careful when editing
         window.onload = function init(){
             setup("canvas");
+            view.viewSize = new paper.Size(window.innerWidth, window.innerHeight);
             loadImages();
             setInterval(update, 1000 / 30);
             setInterval(shoot, 1000 / 30);
