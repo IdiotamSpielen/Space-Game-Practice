@@ -12,9 +12,11 @@
         let bossSpawns = 0;
         let bossSpawned = false;
 
+        //Graphic/logic variables
         let backgroundImage;
         let gameOverScreen;
         let player;
+        let shot;
 
         let enemies1 = [];
         let enemies2 = [];
@@ -59,11 +61,11 @@
         window.onload = function init(){
             paper.setup("canvas");
             loadImages();
-            setInterval(update, 1000 / 30);
-            setInterval(shoot, 1000 / 30);
+            setInterval(update, 1000 / 60);
+            setInterval(shoot, 1000 / 60);
             setInterval(enemyShoots, 1000);
             setInterval(bossShoots, 750);
-            setInterval(testCollision, 1000 / 30);
+            setInterval(testCollision, 1000 / 60);
             setInterval(createEnemies1, 5000);
             setInterval(createEnemies2, 3000);
             setInterval(createEnemies3, 2000);
@@ -76,11 +78,11 @@
         //Game updates at 30 FPS
         function update(){
             playtime++;
-            if(KEY_DOWN && player.y <= 380){
-                player.y += 6;
+            if(KEY_DOWN && player.position.y <= 420){
+                player.position.y += 4;
             }
-            if(KEY_UP && player.y >= 40){
-                player.y -= 6;
+            if(KEY_UP && player.position.y >= 60){
+                player.position.y -= 4;
             }
             if(bossSpawned == false){
                 timeSinceLastBoss++;
@@ -194,14 +196,19 @@
                     enemy3.age = 0;
                 }
             })
+            //Logic for shot movement
             shots.forEach(function(shot){
-                shot.x += 15;
-                if(shot.x > 860){
+                shot.position.x += 7;
+                if(shot.position.x > 880){
+                    shot.remove();
                     shots = shots.filter(u => u != shot);
                 }
             })
             enemyshots.forEach(function(enemyshot){
-                enemyshot.x -= 15;
+                enemyshot.position.x -= 5;
+                if(enemyshot.position.x < -5){
+                    enemyshots = enemyshots.filter(u => u != enemyshot);
+                }
             })
         }
 
@@ -316,12 +323,9 @@
         //This is probably due to interval rates.
         function shoot(){
             if(KEY_SPACE && hasFired == false){
-                let raster = new Raster('img/YourLaser.png')
-                raster.position = new Point(player.x + 100, player.y + 25);
-                raster.size = new Size(29, 16);
-                let shot = {
-                    raster: raster
-                }
+                shot = new paper.Raster('img/YourLaser.png')
+                shot.position = new paper.Point(player.position.x + 50, player.position.y);
+                shot.scaling = new paper.Size(1, 1);
                 shots.push(shot);
                 hasFired = true;
             }
@@ -381,12 +385,9 @@
             if(bossSpawned != true){
                 enemies3.forEach(function(enemy3){
                     if(!enemy3.hit){
-                        let raster = new paper.Raster('img/YourLaser.png')
-                        raster.position = new paper.Point(enemy3.x + 100, enemy3.y + 25);
-                        raster.size = new paper.Size(29, 16);
-                        let enemyShot = {
-                            raster: raster
-                        }
+                        let enemyShot = new paper.Raster('img/EnemyLaser.png')
+                        enemyShot.position = new paper.Point(enemy3.x + 100, enemy3.y + 25);
+                        enemyShot.size = new paper.Size(29, 16);
                         enemyshots.push(enemyShot);
                     }
                 })
@@ -396,16 +397,9 @@
         function bossShoots(){
             if(bossSpawned == true){
                 bosses.forEach(function(boss){
-                    let raster = new paper.Raster('img/YourLaser.png')
-                    raster.position = new paper.Point(player.x + 100, player.y + 25);
-                    let enemyshot = {
-                        x: boss.x,
-                        y: boss.y + boss.height/2,
-                        width: 29,
-                        height: 16, 
-                        img: 'img/EnemyLaser.png'
-                    }
-                    enemyshot.img.src = enemyshot.src;
+                    let enemyShot = new paper.Raster('img/EnemyLaser.png')
+                    enemyShot.position = new paper.Point(boss.position.x + 100, boss.position.y + 25);
+                    enemyShot.size = new paper.Size(29, 16);
                     enemyshots.push(enemyshot);
                 })
             }
@@ -417,13 +411,16 @@
         function loadImages(){
             if (lost == true){
             gameOverScreen = new paper.Raster('img/GameOver.jpg');
+            gameOverScreen.position = paper.view.center;
+            player = null;
+            backgroundImage = null;
             }
             else{
             backgroundImage = new paper.Raster('img/background.jpg');
-            backgroundImage.size = new paper.Size(855, 480);
+            backgroundImage.position = paper.view.center
             player = new paper.Raster('img/PlayerSpaceship.png');
-            player.position = new paper.Point(50, 200);
-            player.size = new paper.Size(50, 75);
+            player.position = new paper.Point(100, 250);
+            player.scaling = new paper.Size(2.8, 2);
             }
         }
 
