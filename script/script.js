@@ -12,20 +12,9 @@
         let bossSpawns = 0;
         let bossSpawned = false;
 
-        let backgroundImage = {
-            raster: null
-        }
-        let gameOverScreen = {
-            raster: null
-        }
-
-        let player = {
-            height: 50,
-            raster: null,
-            width: 75,
-            x: 50,
-            y: 200
-        };
+        let backgroundImage;
+        let gameOverScreen;
+        let player;
 
         let enemies1 = [];
         let enemies2 = [];
@@ -69,7 +58,6 @@
         //the core of all of this. Be very careful when editing
         window.onload = function init(){
             paper.setup("canvas");
-            
             loadImages();
             setInterval(update, 1000 / 30);
             setInterval(shoot, 1000 / 30);
@@ -427,43 +415,21 @@
         
         //Points towards where the spritefiles are
         function loadImages(){
-            backgroundImage.raster = new paper.Raster('img/background.jpg');
-            gameOverScreen.raster = new paper.Raster('img/GameOver.jpg');
-            player.raster = new paper.Raster('img/PlayerSpaceship.png');
+            if (lost == true){
+            gameOverScreen = new paper.Raster('img/GameOver.jpg');
+            }
+            else{
+            backgroundImage = new paper.Raster('img/background.jpg');
+            backgroundImage.size = new paper.Size(855, 480);
+            player = new paper.Raster('img/PlayerSpaceship.png');
+            player.position = new paper.Point(50, 200);
+            player.size = new paper.Size(50, 75);
+            }
         }
 
         //Generates the Gamescreen
         function draw(){
-
-
-            if(lost == true){
-                player.raster.draw();
-                shots.length = 0;
-                setTimeout(() => {
-                    gameOverScreen.raster.draw();
-                }, 1200);
-            }
-            else{
-                backgroundImage.raster.draw();
-                player.img.draw();
-                enemies1.forEach(function(enemy1){
-                    enemy1.raster.draw();
-                })
-                enemies2.forEach(function(enemy2){
-                    enemy2.raster.draw();
-                })
-                enemies3.forEach(function(enemy3){
-                    enemy3.raster.draw();
-                })
-                shots.forEach(function(shot){
-                    shot.raster.draw();
-                })
-                enemyshots.forEach(function(enemyshot){
-                    enemyshot.raster.draw();
-                })
-                bosses.forEach(function(boss){
-                    boss.raster.draw();
-                })
-            }
-                requestAnimationFrame(draw);
+            if (lost == true){loadImages()}
+            paper.view.draw();
+            requestAnimationFrame(draw);
         }
