@@ -1,7 +1,3 @@
-        //graphic variables
-        let canvas = document.getElementById('canvas');
-        var ctx;
-
         //general logic variables
         let KEY_SPACE = false;
         let KEY_UP = false;
@@ -11,21 +7,21 @@
         let score = 0;
 
         //Logic variables for bosses
-        var bossHits;
+        let bossHits;
         let timeSinceLastBoss = 0;
         let bossSpawns = 0;
-        var bossSpawned = false;
+        let bossSpawned = false;
 
-        var backgroundImage;
-        var gameOverScreen;
+        let backgroundImage;
+        let gameOverScreen;
 
         let player = {
-            x: 50,
-            y: 200,
-            width: 75,
             height: 50,
-            img: null
-        }
+            img: null,
+            width: 75,
+            x: 50,
+            y: 200
+        };
 
         let enemies1 = [];
         let enemies2 = [];
@@ -69,21 +65,20 @@
         //the core of all of this. Be very careful when editing
         window.onload = function init(){
             setup("canvas");
-            view.viewSize = new paper.Size(window.innerWidth, window.innerHeight);
             loadImages();
             setInterval(update, 1000 / 30);
             setInterval(shoot, 1000 / 30);
             setInterval(enemyShoots, 1000);
-            setInterval(bossShoots, 750)
+            setInterval(bossShoots, 750);
             setInterval(testCollision, 1000 / 30);
             setInterval(createEnemies1, 5000);
             setInterval(createEnemies2, 3000);
             setInterval(createEnemies3, 2000);
-            setInterval(spawnBoss, 5000)
+            setInterval(spawnBoss, 5000);
             setInterval(refillAmmo, 1000 / 3);
             
             draw();
-        }
+        };
 
         //Game updates at 30 FPS
         function update(){
@@ -95,7 +90,7 @@
                 player.y -= 6;
             }
             if(bossSpawned == false){
-                timeSinceLastBoss++
+                timeSinceLastBoss++;
             }
 
             document.getElementById("score").innerHTML = "Score: " + score;
@@ -103,7 +98,7 @@
             bosses.forEach(function(boss){
                 if(boss.x + boss.width > 810){
                     boss.x -= 6;
-                    bossSpawned = true
+                    bossSpawned = true;
                 }
                 else if(boss.x + boss.width <= 810){
                     if(boss.y <= 40){
@@ -143,7 +138,7 @@
             //Behaviour of second enemy
             enemies2.forEach(function(enemy2){
                 if(!enemy2.hit){
-                    var zigzag = Math.random() < 0.5;
+                    let zigzag = Math.random() < 0.5;
                     enemy2.x -= 10;
                     if(zigzag){
                         enemy2.y -= 10;
@@ -322,8 +317,6 @@
                     lost = true;}  
                 })
             })
-            
-
         }
 
         //BUG in rare cases it is possible to give off two shots in quick succession.
