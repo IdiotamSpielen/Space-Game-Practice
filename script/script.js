@@ -70,9 +70,7 @@ window.onload = function init(){
     setAndStoreInterval(createEnemies2, 3000);
     setAndStoreInterval(createEnemies3, 2000);
     setAndStoreInterval(enemyShoots, 1000);
-    setAndStoreInterval(bossShoots, 750);
-
-    
+    setAndStoreInterval(bossShoots, 750);   
     draw();
 };
 
@@ -428,6 +426,10 @@ function loadImages(){
     player = null;
     backgroundImage.remove();
     backgroundImage = null;
+    for (let id of intervalIDs) {
+        clearInterval(id);
+    }
+    intervalIDs = []; 
     }
     else{
     backgroundImage = new paper.Raster('img/background.jpg');
@@ -440,8 +442,10 @@ function loadImages(){
 
 //Generates the Gamescreen
 function draw(){
-    if (lost == true){loadImages()}
+    if (lost == true){loadImages();}
+    else{
     paper.view.update()
     paper.view.draw();
     requestAnimationFrame(draw);
+    }
 }
