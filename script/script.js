@@ -12,12 +12,16 @@
         let bossSpawns = 0;
         let bossSpawned = false;
 
-        let backgroundImage;
-        let gameOverScreen;
+        let backgroundImage = {
+            raster: null
+        }
+        let gameOverScreen = {
+            raster: null
+        }
 
         let player = {
             height: 50,
-            img: null,
+            raster: null,
             width: 75,
             x: 50,
             y: 200
@@ -64,7 +68,8 @@
 
         //the core of all of this. Be very careful when editing
         window.onload = function init(){
-            setup("canvas");
+            paper.setup("canvas");
+            
             loadImages();
             setInterval(update, 1000 / 30);
             setInterval(shoot, 1000 / 30);
@@ -216,18 +221,17 @@
         //Seriously, don't. I don't even rightly know how this works.
         function testCollision(){
             //Player Hitbox
-            let playerHitbox = new Rectangle(new Point(player.x, player.y), new Size(player.width, player.height));
+            let playerHitbox = new paper.Rectangle(new paper.Point(player.x, player.y), new paper.Size(player.width, player.height));
             //Hitbox for the first enemy type
             enemies1.forEach(function(enemy1){
-                let enemy1Hitbox = new Rectangle(new paper.Point(enemy1.x, enemy1.y), new Size(enemy1.width, enemy1.height));
+                let enemy1Hitbox = new paper.Rectangle(new paper.Point(enemy1.x, enemy1.y), new paper.Size(enemy1.width, enemy1.height));
                 if(playerHitbox.intersects(enemy1Hitbox)){
                     lost = true;
                     player.img.src = 'img/Explosion.png';
                     enemies1 = enemies1.filter(u => u != enemy1);
                 }
-
                 shots.forEach(function(shot){
-                    let shotHitbox = new Rectangle(new Point(shot.x, shot.y), new Size(shot.width, shot.height))
+                    let shotHitbox = new paper.Rectangle(new paper.Point(shot.x, shot.y), new paper.Size(shot.width, shot.height))
                     if (shotHitbox.intersects(enemy1Hitbox)) {
                         if(enemy1.hit == false){
                             score += 1;
@@ -239,9 +243,10 @@
                             enemies1 = enemies1.filter(u => u != enemy1);
                         }, 500);}
                 })
-            })
+            });
             //Hitbox for the second enemy type
             enemies2.forEach(function(enemy2){
+                let enemy2Hitbox = new paper.Rectangle(new paper.Point(enemy2.x, enemy2.y), new paper.Size(enemy2.width, enemy2.height))
                 if(player.x + player.width > enemy2.x && player.y + player.height > enemy2.y && player.x < enemy2.x && player.y < enemy2.y + enemy2.height){
                     player.img.src = 'img/Explosion.png';
                     enemies2 = enemies2.filter(u => u != enemy2);
@@ -340,9 +345,9 @@
 
         //All the stuff that makes the enemies appear
         function createEnemy(x, y, width, height, img, array, additionalproperties = {}) {
-           let raster = new paper.Raster(img)
-           raster.position = new Point(x, y);
-           raster.size = new Size(width, height);
+            let raster = new paper.Raster(img)
+            raster.position = new paper.Point(x, y);
+            raster.size = new paper.Size(width, height);
             let enemy = {
                 raster: raster,
                 hit: false,
@@ -388,9 +393,9 @@
             if(bossSpawned != true){
                 enemies3.forEach(function(enemy3){
                     if(!enemy3.hit){
-                        let raster = new Raster('img/YourLaser.png')
-                        raster.position = new Point(enemy3.x + 100, enemy3.y + 25);
-                        raster.size = new Size(29, 16);
+                        let raster = new paper.Raster('img/YourLaser.png')
+                        raster.position = new paper.Point(enemy3.x + 100, enemy3.y + 25);
+                        raster.size = new paper.Size(29, 16);
                         let enemyShot = {
                             raster: raster
                         }
@@ -403,8 +408,8 @@
         function bossShoots(){
             if(bossSpawned == true){
                 bosses.forEach(function(boss){
-                    let raster = new Raster('img/YourLaser.png')
-                    raster.position = new Point(player.x + 100, player.y + 25);
+                    let raster = new paper.Raster('img/YourLaser.png')
+                    raster.position = new paper.Point(player.x + 100, player.y + 25);
                     let enemyshot = {
                         x: boss.x,
                         y: boss.y + boss.height/2,
@@ -422,24 +427,25 @@
         
         //Points towards where the spritefiles are
         function loadImages(){
-            backgroundImage = new paper.Raster('img/background.jpg');
-            gameOverScreen = new paper.Raster('img/GameOver.jpg');
-
-            player.img = new paper.Raster('img/PlayerSpaceship.png');
+            backgroundImage.raster = new paper.Raster('img/background.jpg');
+            gameOverScreen.raster = new paper.Raster('img/GameOver.jpg');
+            player.raster = new paper.Raster('img/PlayerSpaceship.png');
         }
 
         //Generates the Gamescreen
         function draw(){
+
+
             if(lost == true){
                 player.raster.draw();
                 shots.length = 0;
                 setTimeout(() => {
-                    gameOverScreen.draw();
+                    gameOverScreen.raster.draw();
                 }, 1200);
             }
             else{
-                backgroundImage.draw();
-                player.raster.draw();
+                backgroundImage.raster.draw();
+                player.img.draw();
                 enemies1.forEach(function(enemy1){
                     enemy1.raster.draw();
                 })
