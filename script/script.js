@@ -64,7 +64,7 @@ window.onload = function init(){
     setAndStoreInterval(update, 1000 / 60);
     setAndStoreInterval(shoot, 1000 / 60);
     setAndStoreInterval(testCollision, 1000 / 60);
-    setAndStoreInterval(refillAmmo, 1000 / 3);
+    setAndStoreInterval(refillAmmo, 1000 / 2);
     setAndStoreInterval(spawnBoss, 5000);
     setAndStoreInterval(createEnemies1, 5000);
     setAndStoreInterval(createEnemies2, 3000);
@@ -74,13 +74,17 @@ window.onload = function init(){
     draw();
 };
 
-//This exists purely to reduce redundancy
+//support functions:
 function setAndStoreInterval(func, delay) {
     let id = setInterval(func, delay);
     intervalIDs.push(id);
 }
 
-//Game updates at 60 FPS
+function randomIntFromInterval(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + Math.abs(min))
+}
+
+//Game update
 function update(){
     playtime++;
     if(KEY_DOWN && player.position.y <= 420){
@@ -139,16 +143,20 @@ function update(){
     //Behaviour of second enemy
     enemies2.forEach(function(enemy2){
         if(!enemy2.hit){
+            let rerollTime = 0;
             let zigzag = Math.random() < 0.5;
-            enemy2.x -= 10;
-            if(zigzag){
-                enemy2.y -= 10;
+            enemy2.raster.position.x -= 5;
+            if(zigzag && rerollTime < randomIntFromInterval(500, 1000)){
+                enemy2.raster.position.y -= 3;
+                rerollTime++
             }
-            if(!zigzag){
-                enemy2.y += 10;
+            if(!zigzag && rerollTime < randomIntFromInterval(500, 1000)){
+                enemy2.raster.position.y += 3;
+                rerollTime++;
             }
         }
         if(enemy2.raster.position.x < -25 || enemy2.raster.position.y < -10 || enemy2.raster.position.y > 500){
+            enemy2.raster.remove();
             enemies2 = enemies2.filter(u => u != enemy2);
         }
     })
@@ -218,8 +226,7 @@ function update(){
     })
 }
 
-//XXX Code for Hitboxes. DO NOT TOUCH!
-//Seriously, don't. I don't even rightly know how this works.
+//Hitbox logic
 function testCollision(){
     //Player Hitbox
     let playerHitbox;
@@ -229,47 +236,49 @@ function testCollision(){
         let enemy1Hitbox = enemy1.raster.bounds;
         
         if(player && playerHitbox.intersects(enemy1Hitbox)){
-            console.log("collision")
             player.source = 'img/Explosion.png';
             enemy1.raster.remove();
             enemies1 = enemies1.filter(u => u != enemy1);
-            setTimeout(() => {lost = true;}, 2000);
+            setTimeout(() => {lost = true;}, 1000);
         }
         shots.forEach(function(shot){
-            let shotHitbox = new paper.Rectangle(new paper.Point(shot.x, shot.y), new paper.Size(shot.width, shot.height))
+            let shotHitbox = shot.bounds;
             if (shotHitbox.intersects(enemy1Hitbox)) {
                 if(enemy1.hit == false){
                     score += 1;
                 }
                 enemy1.hit = true; 
-                enemy1.raster.src = 'img/Explosion.png';
+                enemy1.raster.source = 'img/Explosion.png';
                 shots = shots.filter(u => u != shot);
+                shot.remove();
+                enemies1 = enemies1.filter(u => u != enemy1);
                 setTimeout(() => {
-                    enemies1 = enemies1.filter(u => u != enemy1);
+                    enemy1.raster.remove();
                 }, 500);}
         })
     });
     //Hitbox for the second enemy type
     enemies2.forEach(function(enemy2){
-        let enemy2Hitbox = new paper.Rectangle(new paper.Point(enemy2.x, enemy2.y), new paper.Size(enemy2.width, enemy2.height))
-        if(player.x + player.width > enemy2.x && player.y + player.height > enemy2.y && player.x < enemy2.x && player.y < enemy2.y + enemy2.height){
-            player.img.src = 'img/Explosion.png';
+        let enemy2Hitbox = enemy2.raster.bounds
+        if(player && playerHitbox.intersects(enemy2Hitbox)){
+            player.source = 'img/Explosion.png';
+            enemy2.raster.remove();
             enemies2 = enemies2.filter(u => u != enemy2);
-            lost = true;}
-        else if(player.x + player.width > enemy2.x + enemy2.width && player.y + player.height > enemy2.y && player.x < enemy2.x + enemy2.width && player.y < enemy2.y + enemy2.height){
-            player.img.src = 'img/Explosion.png';
-            enemies2 = enemies2.filter(u => u != enemy2);
-            lost = true;}  
+            setTimeout(() => {lost = true;}, 1000);
+        }
         shots.forEach(function(shot){
-            if (shot.x + shot.width > enemy2.x && shot.y + shot.height > enemy2.y && shot.x < enemy2.x && shot.y < enemy2.y + enemy2.height) {
+            let shotHitbox = shot.bounds
+            if (shotHitbox.intersects(enemy2Hitbox)) {
                 if(enemy2.hit == false){
                     score += 2;
                 }
                 enemy2.hit = true;
-                enemy2.img.src = 'img/Explosion.png';
+                enemy2.raster.source = 'img/Explosion.png';
                 shots = shots.filter(u => u != shot);
+                shot.remove();
+                enemies2 = enemies2.filter(u => u != enemy2);
                 setTimeout(() => {
-                    enemies2 = enemies2.filter(u => u != enemy2);
+                    enemy2.raster.remove()
                 }, 500);}
         })
     })
@@ -360,25 +369,25 @@ function createEnemy(x, y, width, height, img, array, additionalproperties = {})
 
 function createEnemies1() {
     if (bossSpawned != true) {
-        createEnemy(900, Math.random() * 400, 4, 2.5, 'img/EnemySpaceship1.png', enemies1);
+        createEnemy(900, randomIntFromInterval(60, 420), 4, 2.5, 'img/EnemySpaceship1.png', enemies1);
     }
 }
 
 function createEnemies2() {
     if (playtime >= 300 && bossSpawned != true) {
-        createEnemy(900, Math.random() * 400, 1, 1, 'img/EnemySpaceship2.png', enemies2);
+        createEnemy(900, randomIntFromInterval(60, 420), 2, 2, 'img/EnemySpaceship2.png', enemies2);
     }
 }
 
 function createEnemies3() {
     if (playtime >= 600 && enemies3.length < 2 && bossSpawned != true) {
-        createEnemy(900, Math.random() * 400, 1, 1, 'img/EnemySpaceship3.png', enemies3, { age: 0, direction: null });
+        createEnemy(900, randomIntFromInterval(60, 420), 1, 1, 'img/EnemySpaceship3.png', enemies3, { age: 0, direction: null });
     }
 }
 
 function spawnBoss() {
     if (playtime >= 1000 && bossSpawns < 1) {
-        createEnemy(900, 200, 1, 1, 'img/Boss.png', bosses, { bossHits: 0, direction: null }); 
+        createEnemy(900, 250, 1, 1, 'img/Boss.png', bosses, { bossHits: 0, direction: null }); 
         setInterval(createEnemies1, 3000);
         setInterval(createEnemies2, 2000);
         setInterval(createEnemies3, 1000);
@@ -420,16 +429,20 @@ function bossShoots(){
 //Points towards where the spritefiles are
 function loadImages(){
     if (lost == true){
-    gameOverScreen = new paper.Raster('img/GameOver.jpg');
-    gameOverScreen.position = paper.view.center;
-    player.remove();
-    player = null;
-    backgroundImage.remove();
-    backgroundImage = null;
-    for (let id of intervalIDs) {
-        clearInterval(id);
-    }
-    intervalIDs = []; 
+        enemies1 = [];
+        enemies2 = [];
+        enemies3 = [];
+        bosses = [];
+        gameOverScreen = new paper.Raster('img/GameOver.jpg');
+        gameOverScreen.position = paper.view.center;
+        player.remove();
+        player = null;
+        backgroundImage.remove();
+        backgroundImage = null;
+        for (let id of intervalIDs) {
+            clearInterval(id);
+        }
+        intervalIDs = []; 
     }
     else{
     backgroundImage = new paper.Raster('img/background.jpg');
