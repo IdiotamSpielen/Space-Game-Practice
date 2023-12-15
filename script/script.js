@@ -99,117 +99,13 @@ function update(){
 
     document.getElementById("score").innerHTML = "Score: " + score;
     //boss-behaviour
-    bosses.forEach(function(boss){
-        if(boss.x + boss.width > 810){
-            boss.x -= 6;
-            bossSpawned = true;
-        }
-        else if(boss.x + boss.width <= 810){
-            if(boss.y <= 40){
-                boss.y += 5;
-                boss.direction = true;
-            }
-            else if(boss.y >= 380){
-                boss.y -= 5;
-                boss.direction = false;
-            }
-            else if (boss.direction && boss.y < 380){
-                boss.y += 5;
-            }
-            else if(!boss.direction && boss.y > 40){
-                boss.y -= 5;
-            }
-        }
-        if(boss.bossHits >= 3){
-            if(bossSpawned == true){
-                score += 5;
-            }
-            bossSpawned = false;
-            boss.img.src = 'img/Explosion.png';
-            setTimeout(() => {
-                    bosses = bosses.filter(u => u != boss);
-            }, 500);
-        }
-    })
+    bosses.forEach(bossBehaviour)
     //Behaviour of first enemy
-    enemies1.forEach(function(enemy1){
-        if(!enemy1.hit){
-            enemy1.raster.position.x -= 3;}
-        if(enemy1.raster.position.x < -25){
-            enemy1.raster.remove();
-            enemies1 = enemies1.filter(u => u != enemy1);
-        }
-    })
+    enemies1.forEach(enemy1Behaviour)
     //Behaviour of second enemy
-    enemies2.forEach(function(enemy2){
-        if(!enemy2.hit){
-            let rerollTime = 0;
-            let zigzag = Math.random() < 0.5;
-            enemy2.raster.position.x -= 5;
-            if(zigzag && rerollTime < randomIntFromInterval(500, 1000)){
-                enemy2.raster.position.y -= 3;
-                rerollTime++
-            }
-            if(!zigzag && rerollTime < randomIntFromInterval(500, 1000)){
-                enemy2.raster.position.y += 3;
-                rerollTime++;
-            }
-        }
-        if(enemy2.raster.position.x < -25 || enemy2.raster.position.y < -10 || enemy2.raster.position.y > 500){
-            enemy2.raster.remove();
-            enemies2 = enemies2.filter(u => u != enemy2);
-        }
-    })
+    enemies2.forEach(enemy2Behaviour)
     //behaviour of third enemy
-    enemies3.forEach(function(enemy3){
-        if(!enemy3.hit){
-            if(bossSpawned == true){
-                enemy3.x -= 6;
-            }
-            else if (enemy3.age < 200){
-                if (enemy3.x + enemy3.width > 810){
-                enemy3.x -= 6;}
-                if(enemy3.x + enemy3.width <= 810){
-                    if (enemy3.age < 3){
-                        enemy3.direction = Math.random() < 0.5;
-                            if(enemy3.x == 820){
-                            if (enemy3.direction && enemy3.y < 380){
-                                enemy3.y += 3;
-                            }
-                            else if(!enemy3.direction &&  enemy3.y > 40){
-                                enemy3.y -= 3;
-                            }
-                        }
-                        enemy3.age++;
-                    }
-                    else if(enemy3.age >= 3){
-                            if(enemy3.y <= 40){
-                                enemy3.y += 3;
-                                enemy3.direction = true;
-                            }
-                            else if(enemy3.y >= 380){
-                                enemy3.y -= 3;
-                                enemy3.direction = false;
-                            }
-                            else if (enemy3.direction && enemy3.y < 380){
-                                enemy3.y += 3;
-                            }
-                            else if(!enemy3.direction && enemy3.y > 40){
-                                enemy3.y -= 3;
-                            }
-                            enemy3.age++;    
-                        }
-                }
-            }
-            else if (enemy3.age >= 200){
-                enemy3.x -= 6;
-            }
-        }
-        if(enemy3.x + enemy3.width < -2){
-            enemies3 = enemies3.filter(u => u != enemy3);
-            enemy3.age = 0;
-        }
-    })
+    enemies3.forEach(enemy3Behaviour)
     //Logic for shot movement
     shots.forEach(function(shot){
         shot.position.x += 7;
@@ -225,7 +121,6 @@ function update(){
         }
     })
 }
-
 //Hitbox logic
 function testCollision(){
     //Player Hitbox
@@ -381,7 +276,7 @@ function createEnemies2() {
 
 function createEnemies3() {
     if (playtime >= 600 && enemies3.length < 2 && bossSpawned != true) {
-        createEnemy(900, randomIntFromInterval(60, 420), 1, 1, 'img/EnemySpaceship3.png', enemies3, { age: 0, direction: null });
+        createEnemy(900, randomIntFromInterval(60, 420), 2.5, 2.5, 'img/EnemySpaceship3.png', enemies3, { age: 0, direction: null, initial: false });
     }
 }
 
@@ -399,6 +294,90 @@ function spawnBoss() {
     timeSinceLastBoss = 0;
 }
 
+//Movement behavoir for the enemies
+//Boss
+function bossBehaviour(boss){
+    let bossRaster = boss.raster.position;
+    if(bossRaster.x > 810){
+        bossRaster.x -= 3;
+        bossSpawned = true;
+    }
+    else{
+        if(bossRaster.y <= 60 || (boss.direction && bossRaster.y < 420)){
+            bossRaster.y += 3;
+            boss.direction = true;
+        }
+        else if(bossRaster.y >= 420 || (!boss.direction && bossRaster.y > 60)){
+            bossRaster.y -= 3;
+            boss.direction = false;
+        }
+    }
+    if(boss.bossHits >= 3){
+        if(bossSpawned == true){
+            score += 5;
+        }
+        bossSpawned = false;
+        boss.raster.source = 'img/Explosion.png';
+        setTimeout(() => {
+            boss.raster.remove();
+            bosses = bosses.filter(u => u != boss);
+        }, 500);
+    }
+}
+//first enemy
+function enemy1Behaviour(enemy1){
+    if(!enemy1.hit){
+        enemy1.raster.position.x -= 3;
+    }
+    enemies1 = removeEntity(enemy1, enemies1);
+}
+//second enemy
+function enemy2Behaviour(enemy2){
+    if(!enemy2.hit){
+        let rerollTime = 0;
+        let zigzag = Math.random() < 0.5;
+        enemy2.raster.position.x -= 5;
+        if(zigzag && rerollTime < randomIntFromInterval(500, 1000)){
+            enemy2.raster.position.y -= 3;
+            rerollTime++
+        }
+        if(!zigzag && rerollTime < randomIntFromInterval(500, 1000)){
+            enemy2.raster.position.y += 3;
+            rerollTime++;
+        }
+    }
+    enemies2 = removeEntity(enemy2, enemies2);
+}
+//third enemy
+function enemy3Behaviour(enemy3){
+    let enemy3Position = enemy3.raster.position;
+    if (enemy3.initial == false){
+        enemy3.direction = Math.random() < 0.5;
+        enemy3.initial = true;
+    }
+    if(!enemy3.hit){
+        if(bossSpawned == true){
+            enemy3Position.x -= 6;
+        }
+        else if (enemy3.age < 400 && enemy3Position.x > 780){
+            enemy3Position.x -= 6;}
+        if(enemy3Position.x == 780){
+            if((enemy3.direction && enemy3Position.y < 420) || (!enemy3.direction &&  enemy3Position.y > 60)){
+                enemy3Position.y += enemy3.direction ? 3 : -3;
+            }
+            else if(enemy3Position.y <= 60 || enemy3Position.y >= 420){
+                enemy3.direction = enemy3Position.y <= 60;
+            }    
+        }
+        enemy3.age++;
+    }
+        
+    else if (enemy3.age >= 400){
+        enemy3Position.x -= 6;
+    }
+    enemies3 = removeEntity(enemy3, enemies3);
+}
+
 //Logic for enemy attacks
 function enemyShoots(){
     if(bossSpawned != true){
@@ -411,6 +390,15 @@ function enemyShoots(){
             }
         })
     }
+}
+
+//making enemies disappear
+function removeEntity(entity, entityarray){
+    if (entity.raster.position.x < -25 || entity.raster.position.y < -20 || entity.raster.position.y > 500){
+        entity.raster.remove();
+        return entityarray.filter(u => u != entity);
+    }
+    return entityarray;
 }
 
 function bossShoots(){
