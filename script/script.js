@@ -239,7 +239,7 @@ function testCollision(){
             player.source = 'img/Explosion.png';
             enemy1.raster.remove();
             enemies1 = enemies1.filter(u => u != enemy1);
-            setTimeout(() => {lost = true;}, 1000);
+            lost = true;
         }
         shots.forEach(function(shot){
             let shotHitbox = shot.bounds;
@@ -264,7 +264,7 @@ function testCollision(){
             player.source = 'img/Explosion.png';
             enemy2.raster.remove();
             enemies2 = enemies2.filter(u => u != enemy2);
-            setTimeout(() => {lost = true;}, 1000);
+            lost = true;
         }
         shots.forEach(function(shot){
             let shotHitbox = shot.bounds
@@ -433,16 +433,18 @@ function loadImages(){
         enemies2 = [];
         enemies3 = [];
         bosses = [];
-        gameOverScreen = new paper.Raster('img/GameOver.jpg');
-        gameOverScreen.position = paper.view.center;
-        player.remove();
-        player = null;
-        backgroundImage.remove();
-        backgroundImage = null;
         for (let id of intervalIDs) {
             clearInterval(id);
         }
         intervalIDs = []; 
+        setTimeout(function() {
+            player.remove();
+            player = null;
+            backgroundImage.remove();
+            backgroundImage = null;
+            gameOverScreen = new paper.Raster('img/GameOver.jpg');
+            gameOverScreen.position = paper.view.center;
+        }, 1000);
     }
     else{
     backgroundImage = new paper.Raster('img/background.jpg');
