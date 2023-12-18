@@ -2,8 +2,11 @@
     position: absolute;
     width: 855px;
     height: 480px;
+    z-index: 0;
 }
 
 #score {
-    display: flex;
+    color: red;
+    position: absolute;
+    z-index: 1;
 }

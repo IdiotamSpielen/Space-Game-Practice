@@ -19,6 +19,7 @@ let gameOverScreen;
 let player;
 let shot;
 
+//Other Variables
 let enemies1 = [];
 let enemies2 = [];
 let enemies3 = [];
