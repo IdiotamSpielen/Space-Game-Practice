@@ -11,6 +11,7 @@ let bossHits;
 let timeSinceLastBoss = 0;
 let bossSpawns = 0;
 let bossSpawned = false;
+let firstBoss = false;
 
 //Graphic/logic variables
 let backgroundImage;
@@ -69,7 +70,7 @@ window.onload = function init(){
     setAndStoreInterval(createEnemies1, 5000);
     setAndStoreInterval(createEnemies2, 3000);
     setAndStoreInterval(createEnemies3, 2000);
-    setAndStoreInterval(enemyShoots, 1000);
+    setAndStoreInterval(enemy3Shoots, 1000);
     setAndStoreInterval(bossShoots, 750);   
     draw();
 };
@@ -93,7 +94,7 @@ function update(){
     if(KEY_UP && player.position.y >= 60){
         player.position.y -= 4;
     }
-    if(bossSpawned == false){
+    if(!bossSpawned){
         timeSinceLastBoss++;
     }
 
@@ -114,12 +115,7 @@ function update(){
             shots = shots.filter(u => u != shot);
         }
     })
-    enemyshots.forEach(function(enemyshot){
-        enemyshot.position.x -= 5;
-        if(enemyshot.position.x < -5){
-            enemyshots = enemyshots.filter(u => u != enemyshot);
-        }
-    })
+    enemyshots.forEach(EShotMovement)
 }
 //Hitbox logic
 function testCollision(){
@@ -179,56 +175,57 @@ function testCollision(){
     })
     //Hitbox for The third enemy type
     enemies3.forEach(function(enemy3){
-        if(player.x + player.width > enemy3.x && player.y + player.height > enemy3.y && player.x < enemy3.x && player.y < enemy3.y + enemy3.height){
-            player.img.src = 'img/Explosion.png';
+        let enemy3Hitbox = enemy3.raster.bounds;
+        if(playerHitbox.intersects(enemy3Hitbox)){
+            player.source = 'img/Explosion.png';
             enemies3 = enemies3.filter(u => u != enemy3);
-            lost = true;}
-        else if(player.x + player.width > enemy3.x + enemy3.width && player.y + player.height > enemy3.y && player.x < enemy3.x + enemy3.width && player.y < enemy3.y + enemy3.height){
-            player.img.src = 'img/Explosion.png';
-            enemies2 = enemies2.filter(u => u != enemy3);
-            lost = true;}  
+            enemy3.remove();
+            lost = true;
+        }
         shots.forEach(function(shot){
-            if (shot.x + shot.width > enemy3.x && shot.y + shot.height > enemy3.y && shot.x < enemy3.x && shot.y < enemy3.y + enemy3.height) {
+            let shotHitbox = shot.bounds;
+            if (shotHitbox.intersects(enemy3Hitbox)) {
                 if(enemy3.hit == false){
                     score += 3;
                 }
                 enemy3.hit = true;
-                enemy3.img.src = 'img/Explosion.png';
+                enemy3.raster.source = 'img/Explosion.png';
                 shots = shots.filter(u => u != shot);
+                shot.remove();
                 setTimeout(() => {
                     enemies3 = enemies3.filter(u => u != enemy3);
+                    enemy3.raster.remove();
                 }, 500);}
         })
         //hitbox for enemy shots
         enemyshots.forEach(function(enemyshot){
-            if(player.x + player.width > enemyshot.x && player.y + player.height > enemyshot.y && player.x < enemyshot.x && player.y < enemyshot.y + enemyshot.height){
-            player.img.src = 'img/Explosion.png';
+            let EShotHitbox = enemyshot.bounds;
+            if(playerHitbox.intersects(EShotHitbox)){
+            player.source = 'img/Explosion.png';
             enemyshots = enemyshots.filter(u => u != enemyshot);
+            enemyshot.remove();
             lost = true;}
-        else if(player.x + player.width > enemyshot.x + enemyshot.width && player.y + player.height > enemyshot.y && player.x < enemyshot.x + enemyshot.width && player.y < enemyshot.y + enemyshot.height){
-            player.img.src = 'img/Explosion.png';
-            enemyshots = enemyshots.filter(u => u != enemyshot);
-            lost = true;}  
         })
     })
     // Hitboxes for the boss
     bosses.forEach(function(boss){
+        let bossHitbox = boss.raster.bounds;
         shots.forEach(function(shot){
-            if (shot.x + shot.width > boss.x && shot.y + shot.height > boss.y && shot.x < boss.x && shot.y < boss.y + boss.height) {
+            let shotHitbox = shot.bounds;
+            if (bossHitbox.intersects(shotHitbox)) {
                 boss.bossHits++;
                 shots = shots.filter(u => u != shot);
+                shot.remove();
             }
         })
         //hitbox for enemy shots
         enemyshots.forEach(function(enemyshot){
-            if(player.x + player.width > enemyshot.x && player.y + player.height > enemyshot.y && player.x < enemyshot.x && player.y < enemyshot.y + enemyshot.height){
-            player.img.src = 'img/Explosion.png';
-            enemyshots = enemyshots.filter(u => u != enemyshot);
-            lost = true;}
-        else if(player.x + player.width > enemyshot.x + enemyshot.width && player.y + player.height > enemyshot.y && player.x < enemyshot.x + enemyshot.width && player.y < enemyshot.y + enemyshot.height){
-            player.img.src = 'img/Explosion.png';
-            enemyshots = enemyshots.filter(u => u != enemyshot);
-            lost = true;}  
+            let EShotHitbox = enemyshot.bounds;
+            if(playerHitbox .intersects(EShotHitbox)){
+                player.source = 'img/Explosion.png';
+                enemyshots = enemyshots.filter(u => u != enemyshot);
+                enemyshot.remove();
+                lost = true;}
         })
     })
 }
@@ -249,7 +246,7 @@ function refillAmmo(){
     hasFired = false;
 }
 
-//All the stuff that makes the enemies appear
+//Making enemies appear
 function createEnemy(x, y, width, height, img, array, additionalproperties = {}) {
     let raster = new paper.Raster(img)
     raster.position = new paper.Point(x, y);
@@ -262,43 +259,56 @@ function createEnemy(x, y, width, height, img, array, additionalproperties = {})
     array.push(enemy);
 }
 
+//making enemies disappear
+function removeEntity(entity, entityarray){
+    if (entity.raster.position.x < -25 || entity.raster.position.y < -20 || entity.raster.position.y > 500){
+        entity.raster.remove();
+        return entityarray.filter(u => u != entity);
+    }
+    return entityarray;
+}
+
+//Defining enemy properties
 function createEnemies1() {
-    if (bossSpawned != true) {
+    if (!bossSpawned) {
         createEnemy(900, randomIntFromInterval(60, 420), 4, 2.5, 'img/EnemySpaceship1.png', enemies1);
     }
 }
 
 function createEnemies2() {
-    if (playtime >= 300 && bossSpawned != true) {
+    if (playtime >= 300 && !bossSpawned) {
         createEnemy(900, randomIntFromInterval(60, 420), 2, 2, 'img/EnemySpaceship2.png', enemies2);
     }
 }
 
 function createEnemies3() {
-    if (playtime >= 600 && enemies3.length < 2 && bossSpawned != true) {
+    if (playtime >= 600 && enemies3.length < 2 && !bossSpawned) {
         createEnemy(900, randomIntFromInterval(60, 420), 2.5, 2.5, 'img/EnemySpaceship3.png', enemies3, { age: 0, direction: null, initial: false });
     }
 }
 
 function spawnBoss() {
-    if (playtime >= 1000 && bossSpawns < 1) {
-        createEnemy(900, 250, 1, 1, 'img/Boss.png', bosses, { bossHits: 0, direction: null }); 
+    if (playtime >= 1500 && !firstBoss) {
+        createEnemy(900, 250, 3, 3, 'img/Boss.png', bosses, { bossHits: 0, direction: null }); 
         setInterval(createEnemies1, 3000);
         setInterval(createEnemies2, 2000);
         setInterval(createEnemies3, 1000);
-    } else if (playtime >= 1000 && timeSinceLastBoss >= 1000 && bosses.length < 1) {
+        bossSpawned = true;
+        firstBoss = true;
+    } else if (playtime >= 2000 && timeSinceLastBoss >= 1500 && bosses.length < 1) {
         createEnemy(900, 200, 100, 75, 'img/Boss.png', bosses, { bossHits: 0, direction: null });
 
     }
-    bossSpawns++;
     timeSinceLastBoss = 0;
 }
 
-//Movement behavoir for the enemies
+
+
+//Movement behaviour for the enemies
 //Boss
 function bossBehaviour(boss){
     let bossRaster = boss.raster.position;
-    if(bossRaster.x > 810){
+    if(bossRaster.x > 750){
         bossRaster.x -= 3;
         bossSpawned = true;
     }
@@ -356,67 +366,64 @@ function enemy3Behaviour(enemy3){
         enemy3.initial = true;
     }
     if(!enemy3.hit){
-        if(bossSpawned == true){
+        if(bossSpawned || enemy3.age >= 400){
             enemy3Position.x -= 6;
         }
         else if (enemy3.age < 400 && enemy3Position.x > 780){
-            enemy3Position.x -= 6;}
-        if(enemy3Position.x == 780){
+            enemy3Position.x -= 6;
+        }
+        else if(enemy3Position.x == 780){
             if((enemy3.direction && enemy3Position.y < 420) || (!enemy3.direction &&  enemy3Position.y > 60)){
                 enemy3Position.y += enemy3.direction ? 3 : -3;
             }
             else if(enemy3Position.y <= 60 || enemy3Position.y >= 420){
                 enemy3.direction = enemy3Position.y <= 60;
-            }    
-        }
+            }
+        }   
         enemy3.age++;
     }
-        
-    else if (enemy3.age >= 400){
-        enemy3Position.x -= 6;
-    }
-    enemies3 = removeEntity(enemy3, enemies3);
+    enemies3 = removeEntity(enemy3, enemies3)
 }
-
 //Logic for enemy attacks
-function enemyShoots(){
-    if(bossSpawned != true){
+function enemy3Shoots(){
+    if(!bossSpawned){
         enemies3.forEach(function(enemy3){
+            let enemy3Position = enemy3.raster.position;
             if(!enemy3.hit){
                 let enemyShot = new paper.Raster('img/EnemyLaser.png')
-                enemyShot.position = new paper.Point(enemy3.x + 100, enemy3.y + 25);
-                enemyShot.size = new paper.Size(29, 16);
+                enemyShot.position = new paper.Point(enemy3Position.x - 20, enemy3Position.y + 25);
+                enemyShot.size = new paper.Size(29, 10);
                 enemyshots.push(enemyShot);
             }
         })
     }
 }
 
-//making enemies disappear
-function removeEntity(entity, entityarray){
-    if (entity.raster.position.x < -25 || entity.raster.position.y < -20 || entity.raster.position.y > 500){
-        entity.raster.remove();
-        return entityarray.filter(u => u != entity);
-    }
-    return entityarray;
-}
-
 function bossShoots(){
-    if(bossSpawned == true){
+    if(bossSpawned){
         bosses.forEach(function(boss){
-            let enemyShot = new paper.Raster('img/EnemyLaser.png')
-            enemyShot.position = new paper.Point(boss.position.x + 100, boss.position.y + 25);
-            enemyShot.size = new paper.Size(29, 16);
-            enemyshots.push(enemyshot);
+            let bossPosition = boss.raster.position;
+            if (bossPosition.x <= 750){
+                let enemyShot = new paper.Raster('img/EnemyLaser.png')
+                enemyShot.position = new paper.Point(bossPosition.x - 50, bossPosition.y + 15);
+                enemyShot.size = new paper.Size(29, 10);
+                enemyshots.push(enemyShot);
+            }
         })
     }
 }
 
-
+function EShotMovement(enemyshot){
+    enemyshot.position.x -= 5;
+    if(enemyshot.position.x < -10){
+        enemyshots = enemyshots.filter(u => u != enemyshot);
+        enemyshot.remove();
+    }
+}
 
 //Points towards where the spritefiles are
 function loadImages(){
-    if (lost == true){
+    if (lost){
         enemies1 = [];
         enemies2 = [];
         enemies3 = [];
