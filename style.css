@@ -5,8 +5,12 @@
     z-index: 0;
 }
 
-#score {
-    color: red;
+#scoreboard {
     position: absolute;
+    top: 10px;
+    left: 60px;
+    font-size: 30px;
+    font-weight: 600;
+    color: red;
     z-index: 1;
 }
