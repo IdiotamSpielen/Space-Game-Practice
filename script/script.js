@@ -99,7 +99,7 @@ function update(){
         timeSinceLastBoss++;
     }
 
-    document.getElementById("score").innerHTML = "Score: " + score;
+    document.getElementById("score").innerHTML = score;
     //boss-behaviour
     bosses.forEach(bossBehaviour)
     //Behaviour of first enemy
@@ -392,7 +392,7 @@ function enemy3Shoots(){
             let enemy3Position = enemy3.raster.position;
             if(!enemy3.hit){
                 let enemyShot = new paper.Raster('img/EnemyLaser.png')
-                enemyShot.position = new paper.Point(enemy3Position.x - 20, enemy3Position.y + 25);
+                enemyShot.position = new paper.Point(enemy3Position.x - 20, enemy3Position.y + 20);
                 enemyShot.size = new paper.Size(29, 10);
                 enemyshots.push(enemyShot);
             }
@@ -453,9 +453,9 @@ function loadImages(){
 
 //Generates the Gamescreen
 function draw(){
-    if (lost == true){loadImages();}
+    if (lost){loadImages();}
     else{
-    paper.view.update()
+    paper.view.update();
     paper.view.draw();
     requestAnimationFrame(draw);
     }
