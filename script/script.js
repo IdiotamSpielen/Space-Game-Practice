@@ -19,7 +19,7 @@ let gameOverScreen;
 let player;
 let shot;
 
-//Other Variables
+//Calculation Variables
 let enemies1 = [];
 let enemies2 = [];
 let enemies3 = [];
@@ -30,7 +30,7 @@ let intervalIDs = [];
 let playtime = 0; //Time the player survived
 let age = 0; //Time that an enemy survived on screen
 
-//Button-Logic... Yes this is deprecated. Deal with it!
+//Button-Logic. No lunger deprecated.
 document.addEventListener('keydown', function(e) {
     switch(e.key) {
         case ' ': // Space
@@ -63,20 +63,25 @@ document.addEventListener('keyup', function(e) {
 window.onload = function init(){
     paper.setup("canvas");
     loadImages();
-    setAndStoreInterval(update, 1000 / 60);
-    setAndStoreInterval(shoot, 1000 / 60);
-    setAndStoreInterval(testCollision, 1000 / 60);
-    setAndStoreInterval(refillAmmo, 1000 / 2);
-    setAndStoreInterval(spawnBoss, 5000);
-    setAndStoreInterval(createEnemies1, 5000);
-    setAndStoreInterval(createEnemies2, 3000);
-    setAndStoreInterval(createEnemies3, 2000);
-    setAndStoreInterval(enemy3Shoots, 1000);
-    setAndStoreInterval(bossShoots, 750);   
+
+    const actions = [
+        {func: update, delay: 1000 / 60},
+        {func: shoot, delay: 1000 / 60},
+        {func: testCollision, delay: 1000 / 60},
+        {func: refillAmmo, delay: 1000 / 2},
+        {func: spawnBoss, delay: 5000},
+        {func: createEnemies1, delay: 5000},
+        {func: createEnemies2, delay: 3000},
+        {func: createEnemies3, delay: 2000},
+        {func: enemy3Shoots, delay: 1000},
+        {func: bossShoots, delay: 750}
+    ];
+
+    actions.forEach(action => setAndStoreInterval(action.func, action.delay));
     draw();
 };
 
-//support functions:
+//support functions
 function setAndStoreInterval(func, delay) {
     let id = setInterval(func, delay);
     intervalIDs.push(id);
@@ -231,10 +236,13 @@ function testCollision(){
     })
 }
 
-//BUG in rare cases it is possible to give off two shots in quick succession.
+//BUG in very rare cases it is possible to give off two shots in quick succession.
 //This is probably due to interval rates.
 function shoot(){
-    if(KEY_SPACE && hasFired == false){
+    let lastShotTime = 0;
+    const minShotInterval = 500;
+    let currentTime = new Date().getTime();
+    if(KEY_SPACE && hasFired == false && currentTime - lastShotTime > minShotInterval){
         shot = new paper.Raster('img/YourLaser.png')
         shot.position = new paper.Point(player.position.x + 50, player.position.y);
         shot.scaling = new paper.Size(1, 1);
@@ -243,6 +251,7 @@ function shoot(){
     }
 }
 
+//XXX Possibly unnecessary. Remove if so.
 function refillAmmo(){
     hasFired = false;
 }
@@ -390,7 +399,7 @@ function enemy3Shoots(){
     if(!bossSpawned){
         enemies3.forEach(function(enemy3){
             let enemy3Position = enemy3.raster.position;
-            if(!enemy3.hit){
+            if(!enemy3.hit && enemy3Position.x == 780){
                 let enemyShot = new paper.Raster('img/EnemyLaser.png')
                 enemyShot.position = new paper.Point(enemy3Position.x - 20, enemy3Position.y + 20);
                 enemyShot.size = new paper.Size(29, 10);
@@ -440,6 +449,12 @@ function loadImages(){
             backgroundImage = null;
             gameOverScreen = new paper.Raster('img/GameOver.jpg');
             gameOverScreen.position = paper.view.center;
+            document.getElementById('scoreboard').style.display = 'none'
+            setTimeout(function() {
+                document.getElementById('scoreboard').style.display = 'block'
+                document.getElementById('scoreboard').style.top = '300px'
+                document.getElementById('scoreboard').style.left = '200px'
+            }, 1000);
         }, 1000);
     }
     else{
