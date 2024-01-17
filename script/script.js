@@ -62,6 +62,11 @@ document.addEventListener('keyup', function(e) {
 //the core of all of this. Be very careful when editing
 window.onload = function init(){
     paper.setup("canvas");
+    document.querySelector('button').addEventListener('click', setup);
+};
+
+function setup(){
+    document.querySelector('button').style.display = 'none';
     loadImages();
 
     const actions = [
@@ -79,7 +84,7 @@ window.onload = function init(){
 
     actions.forEach(action => setAndStoreInterval(action.func, action.delay));
     draw();
-};
+}
 
 //support functions
 function setAndStoreInterval(func, delay) {
