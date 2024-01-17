@@ -91,6 +91,11 @@ function randomIntFromInterval(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + Math.abs(min))
 }
 
+function doScoreBoard(){
+    localStorage.setItem('playerScore',score)
+    document.getElementById('scoreBoardEntry1').innerHTML = localStorage.getItem('playerScore')
+}
+
 //Game update
 function update(){
     playtime++;
@@ -441,7 +446,8 @@ function loadImages(){
         for (let id of intervalIDs) {
             clearInterval(id);
         }
-        intervalIDs = []; 
+        intervalIDs = [];
+        doScoreBoard();
         setTimeout(function() {
             player.remove();
             player = null;
@@ -449,11 +455,9 @@ function loadImages(){
             backgroundImage = null;
             gameOverScreen = new paper.Raster('img/GameOver.jpg');
             gameOverScreen.position = paper.view.center;
-            document.getElementById('scoreboard').style.display = 'none'
+            document.getElementById('scoredisplay').style.display = 'none';
             setTimeout(function() {
-                document.getElementById('scoreboard').style.display = 'block'
-                document.getElementById('scoreboard').style.top = '300px'
-                document.getElementById('scoreboard').style.left = '200px'
+                document.getElementById('scoreBoard').style.display = 'block';
             }, 1000);
         }, 1000);
     }
