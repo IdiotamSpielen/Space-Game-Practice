@@ -59,14 +59,15 @@ document.addEventListener('keyup', function(e) {
     }
 });
 
-//the core of all of this. Be very careful when editing
 window.onload = function init(){
     paper.setup("canvas");
-    document.querySelector('button').addEventListener('click', setup);
+    document.querySelector('button').addEventListener('click', startGame);
 };
 
-function setup(){
+//Starts the game upon pressing the "start" button
+function startGame(){
     document.querySelector('button').style.display = 'none';
+    document.getElementById('scoredisplay').style.display = 'block'
     loadImages();
 
     const actions = [
