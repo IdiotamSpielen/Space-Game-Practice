@@ -59,9 +59,15 @@ document.addEventListener('keyup', function(e) {
     }
 });
 
-//the core of all of this. Be very careful when editing
 window.onload = function init(){
     paper.setup("canvas");
+    document.querySelector('button').addEventListener('click', startGame);
+};
+
+//Starts the game upon pressing the "start" button
+function startGame(){
+    document.querySelector('button').style.display = 'none';
+    document.getElementById('scoredisplay').style.display = 'block'
     loadImages();
 
     const actions = [
@@ -79,7 +85,7 @@ window.onload = function init(){
 
     actions.forEach(action => setAndStoreInterval(action.func, action.delay));
     draw();
-};
+}
 
 //support functions
 function setAndStoreInterval(func, delay) {
@@ -89,6 +95,11 @@ function setAndStoreInterval(func, delay) {
 
 function randomIntFromInterval(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + Math.abs(min))
+}
+
+function doScoreBoard(){
+    localStorage.setItem('playerScore',score)
+    document.getElementById('scoreBoardEntry1').innerHTML = localStorage.getItem('playerScore')
 }
 
 //Game update
@@ -441,7 +452,8 @@ function loadImages(){
         for (let id of intervalIDs) {
             clearInterval(id);
         }
-        intervalIDs = []; 
+        intervalIDs = [];
+        doScoreBoard();
         setTimeout(function() {
             player.remove();
             player = null;
@@ -449,11 +461,9 @@ function loadImages(){
             backgroundImage = null;
             gameOverScreen = new paper.Raster('img/GameOver.jpg');
             gameOverScreen.position = paper.view.center;
-            document.getElementById('scoreboard').style.display = 'none'
+            document.getElementById('scoredisplay').style.display = 'none';
             setTimeout(function() {
-                document.getElementById('scoreboard').style.display = 'block'
-                document.getElementById('scoreboard').style.top = '300px'
-                document.getElementById('scoreboard').style.left = '200px'
+                document.getElementById('scoreBoard').style.display = 'block';
             }, 1000);
         }, 1000);
     }
