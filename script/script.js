@@ -1,4 +1,4 @@
-//General logic variables
+//general logic variables
 let KEY_SPACE = false;
 let KEY_UP = false;
 let KEY_DOWN = false;
@@ -13,7 +13,7 @@ let bossSpawns = 0;
 let bossSpawned = false;
 let firstBoss = false;
 
-//Graphic variables
+//Graphic/logic variables
 let backgroundImage;
 let gameOverScreen;
 let player;
@@ -30,17 +30,33 @@ let intervalIDs = [];
 let playtime = 0; //Time the player survived
 let age = 0; //Time that an enemy survived on screen
 
-//Button-Logic. No longer deprecated.
-const keys = [' ', 'ArrowUp', 'ArrowDown'];
+//Button-Logic. No lunger deprecated.
+document.addEventListener('keydown', function(e) {
+    switch(e.key) {
+        case ' ': // Space
+            KEY_SPACE = true;
+            break;
+        case 'ArrowUp': // Up
+            KEY_UP = true;
+            break;
+        case 'ArrowDown': // Down
+            KEY_DOWN = true;
+            break;
+    }
+});
 
-keys.forEach(key => {
-    document.addEventListener('keydown', function(e) {
-        if (e.key === key) window[`KEY_${key.replace('Arrow', '').toUpperCase()}`] = true;
-    });
-
-    document.addEventListener('keyup', function(e) {
-        if (e.key === key) window[`KEY_${key.replace('Arrow', '').toUpperCase()}`] = false;
-    });
+document.addEventListener('keyup', function(e) {
+    switch(e.key) {
+        case ' ': // Space
+            KEY_SPACE = false;
+            break;
+        case 'ArrowUp': // Up
+            KEY_UP = false;
+            break;
+        case 'ArrowDown': // Down
+            KEY_DOWN = false;
+            break;
+    }
 });
 
 //the core of all of this. Be very careful when editing
