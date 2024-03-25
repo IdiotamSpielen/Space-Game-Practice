@@ -21,7 +21,7 @@
 #scoreBoard {
     position: absolute;
     display: none;
-    top: 300px;
+    top: 280px;
     left: 400px;
     font-size: 30px;
     color: red;
