@@ -218,7 +218,7 @@ function testCollision(){
             enemy3.remove();
             lost = true;
         }
-        shots.forEach(function(shot){
+        shots.forEach(shot =>{
             let shotHitbox = shot.bounds;
             if (shotHitbox.intersects(enemy3Hitbox)) {
                 if(enemy3.hit == false){
@@ -234,7 +234,7 @@ function testCollision(){
                 }, 500);}
         })
         //hitbox for enemy shots
-        enemyshots.forEach(function(enemyshot){
+        enemyshots.forEach(enemyshot => {
             let EShotHitbox = enemyshot.bounds;
             if(playerHitbox.intersects(EShotHitbox)){
             player.source = 'img/Explosion.png';
@@ -465,7 +465,7 @@ function EShotMovement(enemyshot){
 function loadImages(){
     if (lost){
         doScoreBoard();
-        setTimeout(function() {
+        setTimeout(() => {
             player.remove();
             player = null;
             backgroundImage.remove();
@@ -473,7 +473,7 @@ function loadImages(){
             gameOverScreen = new paper.Raster('img/GameOver.jpg');
             gameOverScreen.position = paper.view.center;
             document.getElementById('scoredisplay').style.display = 'none';
-            setTimeout(function() {
+            setTimeout(() => {
                 document.getElementById('scoreBoard').style.display = 'block';
             }, 1000);
         }, 1000);
