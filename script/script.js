@@ -1,7 +1,14 @@
-//general logic variables
+//movement logic
 let KEY_SPACE = false;
 let KEY_UP = false;
 let KEY_DOWN = false;
+const PLAYER_MAX_Y = 420;
+const PLAYER_MIN_Y = 60;
+const SHOT_MAX_X = 880;
+const SHOT_SPEED = 7;
+
+
+//general logic variables
 let hasFired = false;
 let lost = false;
 let score = 0;
@@ -30,7 +37,7 @@ let intervalIDs = [];
 let playtime = 0; //Time the player survived
 let age = 0; //Time that an enemy survived on screen
 
-//Button-Logic. No lunger deprecated.
+//Button-Logic. No longer deprecated.
 document.addEventListener('keydown', function(e) {
     switch(e.key) {
         case ' ': // Space
@@ -97,6 +104,17 @@ function randomIntFromInterval(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + Math.abs(min))
 }
 
+function resetGame() {
+    enemies1 = [];
+    enemies2 = [];
+    enemies3 = [];
+    bosses = [];
+    for (let id of intervalIDs) {
+        clearInterval(id);
+    }
+    intervalIDs = [];
+}
+
 function doScoreBoard(){
     localStorage.setItem('playerScore',score)
     document.getElementById('scoreBoardEntry1').innerHTML = localStorage.getItem('playerScore')
@@ -105,10 +123,10 @@ function doScoreBoard(){
 //Game update
 function update(){
     playtime++;
-    if(KEY_DOWN && player.position.y <= 420){
+    if(KEY_DOWN && player.position.y <= PLAYER_MAX_Y){
         player.position.y += 4;
     }
-    if(KEY_UP && player.position.y >= 60){
+    if(KEY_UP && player.position.y >= PLAYER_MIN_Y){
         player.position.y -= 4;
     }
     if(!bossSpawned){
@@ -125,16 +143,17 @@ function update(){
     //behaviour of third enemy
     enemies3.forEach(enemy3Behaviour)
     //Logic for shot movement
-    shots.forEach(function(shot){
-        shot.position.x += 7;
-        if(shot.position.x > 880){
+    shots.forEach(shot => {
+        shot.position.x += SHOT_SPEED;
+        if(shot.position.x > SHOT_MAX_X){
             shot.remove();
             shots = shots.filter(u => u != shot);
         }
     })
     enemyshots.forEach(EShotMovement)
 }
-//Hitbox logic
+
+//Hitbox logic, be careful with this. not even I rightly know how it works
 function testCollision(){
     //Player Hitbox
     let playerHitbox;
@@ -445,14 +464,6 @@ function EShotMovement(enemyshot){
 //Points towards where the spritefiles are
 function loadImages(){
     if (lost){
-        enemies1 = [];
-        enemies2 = [];
-        enemies3 = [];
-        bosses = [];
-        for (let id of intervalIDs) {
-            clearInterval(id);
-        }
-        intervalIDs = [];
         doScoreBoard();
         setTimeout(function() {
             player.remove();
@@ -478,7 +489,10 @@ function loadImages(){
 
 //Generates the Gamescreen
 function draw(){
-    if (lost){loadImages();}
+    if (lost){
+        resetGame();
+        loadImages();
+    }
     else{
     paper.view.update();
     paper.view.draw();
