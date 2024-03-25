@@ -1,11 +1,17 @@
 //movement logic
-let KEY_SPACE = false;
-let KEY_UP = false;
-let KEY_DOWN = false;
-const PLAYER_MAX_Y = 420;
-const PLAYER_MIN_Y = 60;
-const SHOT_MAX_X = 880;
-const SHOT_SPEED = 7;
+const keys = {
+    space: false,
+    up: false,
+    down: false
+}
+
+const playerBounds = {
+    maxY: 420,
+    minY: 60
+}
+
+const shotMaxX = 880;
+const shotSpeed = 7;
 
 
 //general logic variables
@@ -38,30 +44,36 @@ let playtime = 0; //Time the player survived
 let age = 0; //Time that an enemy survived on screen
 
 //Button-Logic. No longer deprecated.
+const keyCodes = {
+    space: ' ',
+    up: 'ArrowUp',
+    down: 'ArrowDown'
+}
+
 document.addEventListener('keydown', function(e) {
     switch(e.key) {
-        case ' ': // Space
-            KEY_SPACE = true;
+        case keyCodes.space: // Space
+            keys.space = true;
             break;
-        case 'ArrowUp': // Up
-            KEY_UP = true;
+        case keyCodes.up: // Up
+            keys.up = true;
             break;
-        case 'ArrowDown': // Down
-            KEY_DOWN = true;
+        case keyCodes.down: // Down
+            keys.down = true;
             break;
     }
 });
 
 document.addEventListener('keyup', function(e) {
     switch(e.key) {
-        case ' ': // Space
-            KEY_SPACE = false;
+        case keyCodes.space: // Space
+            keys.space = false;
             break;
-        case 'ArrowUp': // Up
-            KEY_UP = false;
+        case keyCodes.up: // Up
+            keys.up = false;
             break;
-        case 'ArrowDown': // Down
-            KEY_DOWN = false;
+        case keyCodes.down: // Down
+            keys.down = false;
             break;
     }
 });
@@ -123,10 +135,10 @@ function doScoreBoard(){
 //Game update
 function update(){
     playtime++;
-    if(KEY_DOWN && player.position.y <= PLAYER_MAX_Y){
+    if(keys.up && player.position.y <= playerBounds.maxY){
         player.position.y += 4;
     }
-    if(KEY_UP && player.position.y >= PLAYER_MIN_Y){
+    if(keys.down && player.position.y >= playerBounds.minY){
         player.position.y -= 4;
     }
     if(!bossSpawned){
@@ -144,8 +156,8 @@ function update(){
     enemies3.forEach(enemy3Behaviour)
     //Logic for shot movement
     shots.forEach(shot => {
-        shot.position.x += SHOT_SPEED;
-        if(shot.position.x > SHOT_MAX_X){
+        shot.position.x += shotSpeed;
+        if(shot.position.x > shotMaxX){
             shot.remove();
             shots = shots.filter(u => u != shot);
         }
@@ -272,7 +284,7 @@ function shoot(){
     let lastShotTime = 0;
     const minShotInterval = 500;
     let currentTime = new Date().getTime();
-    if(KEY_SPACE && hasFired == false && currentTime - lastShotTime > minShotInterval){
+    if(keys.space && hasFired == false && currentTime - lastShotTime > minShotInterval){
         shot = new paper.Raster('img/YourLaser.png')
         shot.position = new paper.Point(player.position.x + 50, player.position.y);
         shot.scaling = new paper.Size(1, 1);
