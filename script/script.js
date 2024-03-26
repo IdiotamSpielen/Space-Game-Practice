@@ -234,7 +234,7 @@ function testCollision(){
         if(playerHitbox.intersects(enemy3Hitbox)){
             graphics.player.source = 'img/Explosion.png';
             entities.enemies3 = entities.enemies3.filter(u => u != enemy3);
-            enemy3.remove();
+            enemy3.raster.remove();
             gameStatus.lost = true;
         }
         entities.shots.forEach(shot =>{
@@ -354,8 +354,8 @@ function spawnBoss() {
         setInterval(createEnemies3, 1000);
         bossStatus.spawned = true;
         bossStatus.first = true;
-    } else if (timers.playtime >= 2000 && bossStatus.timeSince >= 1500 && bosses.length < 1) {
-        createEnemy(900, 200, 100, 75, 'img/Boss.png', bosses, { bossHits: 0, direction: null });
+    } else if (timers.playtime >= 2000 && bossStatus.timeSince >= 1500 && entities.bosses.length < 1) {
+        createEnemy(900, 200, 100, 75, 'img/Boss.png', entities.bosses, { bossHits: 0, direction: null });
         bossStatus.spawned = true;
     }
     timeSinceLastBoss = 0;
