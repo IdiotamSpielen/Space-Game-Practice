@@ -1,27 +1,10 @@
 //movement logic
-const keys = {
-    space: false,
-    up: false,
-    down: false
-}
-
-const playerBounds = {
-    maxY: 420,
-    minY: 60
-}
-const shotConfig = {
-    MaxX: 880,
-    Speed: 7,
-    last: 0,
-}
+const keys = {space: false, up: false, down: false};
+const playerBounds = {maxY: 420, minY: 60};
+const shotConfig = {MaxX: 880, Speed: 7, last: 0};
 
 
-//general logic variables
-let gameStatus = {
-    hasFired: false,
-    lost: false,
-    score: 0
-}
+let gameStatus = {hasFired: false, lost: false, score: 0};
 
 //Logic variables for bosses
 let bossStatus = {
@@ -48,10 +31,11 @@ let entities = {
     bosses: []
 }
 
+//timers
 let timers = {
     intervalIDs: [],
-    playtime: 0, //Time the player survived
-    age: 0 //Enemy-age
+    playtime: 0, //for determining boss spawns
+    age: 0 //for later calculations relating to third enemy
 }
 
 //Button-Logic
@@ -61,32 +45,26 @@ const keyCodes = {
     down: 'ArrowDown'
 }
 
-document.addEventListener('keydown', function(e) {
+function updateKeyState(e, state) {
     switch(e.key) {
         case keyCodes.space: // Space
-            keys.space = true;
+            keys.space = state;
             break;
         case keyCodes.up: // Up
-            keys.up = true;
+            keys.up = state;
             break;
         case keyCodes.down: // Down
-            keys.down = true;
+            keys.down = state;
             break;
     }
+}
+
+document.addEventListener('keydown', function(e) {
+    updateKeyState(e, true);
 });
 
 document.addEventListener('keyup', function(e) {
-    switch(e.key) {
-        case keyCodes.space: // Space
-            keys.space = false;
-            break;
-        case keyCodes.up: // Up
-            keys.up = false;
-            break;
-        case keyCodes.down: // Down
-            keys.down = false;
-            break;
-    }
+    updateKeyState(e, false);
 });
 
 //initializes upon loading the site
@@ -124,6 +102,7 @@ function setAndStoreInterval(func, delay) {
     timers.intervalIDs.push(id);
 }
 
+//generate random integer between min and max
 function randomIntFromInterval(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + Math.abs(min))
 }
