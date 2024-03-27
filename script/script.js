@@ -61,6 +61,7 @@ const keyCodes = {
     down: 'ArrowDown'
 }
 
+/*
 document.addEventListener('keydown', function(e) {
     switch(e.key) {
         case keyCodes.space: // Space
@@ -87,6 +88,29 @@ document.addEventListener('keyup', function(e) {
             keys.down = false;
             break;
     }
+});
+*/
+
+function updateKeyState(e, state) {
+    switch(e.key) {
+        case keyCodes.space: // Space
+            keys.space = state;
+            break;
+        case keyCodes.up: // Up
+            keys.up = state;
+            break;
+        case keyCodes.down: // Down
+            keys.down = state;
+            break;
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    updateKeyState(e, true);
+});
+
+document.addEventListener('keyup', function(e) {
+    updateKeyState(e, false);
 });
 
 //initializes upon loading the site
