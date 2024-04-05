@@ -113,28 +113,37 @@ function resetGame() {
     timers.intervalIDs = [];
 }
 
-function doScoreBoard(){
-    //Define Scoreboard elements
+function getPlayerName() {
+    return document.getElementById('playerNameInput').value;
+}
+
+function UpdateScoreBoard(){
+    //Define Scoreboard entries
     let scoreBoards = [];
+    let playerNames = [];
     for (let i = 1; i <= 5; i++) {
         scoreBoards.push(document.getElementById('scoreBoardEntry' + i));
+        playerNames.push(document.getElementById('playerName' + i));
     }
 
     //Take existing entries from localStorage, if they exist - Otherwise place empty array
     let scores = JSON.parse(localStorage.getItem('scores')) || [];
 
     //add current score to scoreboard array and push the scores to localStorage
-    scores.push(gameStatus.score);
+    scores.push({ name: playerName, score: gameStatus.score });
     localStorage.setItem('scores', JSON.stringify(scores));
 
     //sort scores, highest to lowest
     //then take only the first five entries
-    scores.sort((a, b) => b - a);
+    scores.sort((a, b) => b.score - a.score);
     scores = scores.slice(0, 5);
 
     //add the entries to the scoreboard, if entries exist - otherwise leave empty
     scoreBoards.forEach((scoreBoard, index) => {
-        scoreBoard.innerHTML = scores[index] || '';
+        scoreBoard.innerHTML = scores[index] ? scores[index].score : '';
+    });
+    playerNames.forEach((playerName, index) => {
+        playerName.innerHTML = scores[index] ? scores[index].name + ':' : '';
     });
 }
 
@@ -482,7 +491,10 @@ function EShotMovement(enemyshot){
 //Points towards where the spritefiles are
 function loadImages(){
     if (gameStatus.lost){
-        doScoreBoard();
+        document.getElementById('playerNameInput').style.display = 'block';
+        
+        let playerName = getPlayerName();
+        updateScoreBoard(playerName);
         setTimeout(() => {
             graphics.player.remove();
             graphics.backgroundImage.remove();
