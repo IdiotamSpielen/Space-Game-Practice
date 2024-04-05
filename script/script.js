@@ -81,8 +81,8 @@ function startGame(){
 
     const actions = [
         {func: update, delay: 1000 / 60},
-        {func: shoot, delay: 1000 / 60},
         {func: testCollision, delay: 1000 / 60},
+        {func: shoot, delay: 1000 / 60},
         {func: refillAmmo, delay: 1000 / 2},
         {func: spawnBoss, delay: 5000},
         {func: createEnemies1, delay: 5000},
@@ -114,8 +114,28 @@ function resetGame() {
 }
 
 function doScoreBoard(){
-    localStorage.setItem('playerScore', gameStatus.score)
-    document.getElementById('scoreBoardEntry1').innerHTML = localStorage.getItem('playerScore')
+    //Define Scoreboard elements
+    let scoreBoards = [];
+    for (let i = 1; i <= 5; i++) {
+        scoreBoards.push(document.getElementById('scoreBoardEntry' + i));
+    }
+
+    //Take existing entries from localStorage, if they exist - Otherwise place empty array
+    let scores = JSON.parse(localStorage.getItem('scores')) || [];
+
+    //add current score to scoreboard array and push the scores to localStorage
+    scores.push(gameStatus.score);
+    localStorage.setItem('scores', JSON.stringify(scores));
+
+    //sort scores, highest to lowest
+    //then take only the first five entries
+    scores.sort((a, b) => b - a);
+    scores = scores.slice(0, 5);
+
+    //add the entries to the scoreboard, if entries exist - otherwise leave empty
+    scoreBoards.forEach((scoreBoard, index) => {
+        scoreBoard.innerHTML = scores[index] || '';
+    });
 }
 
 //Game update
