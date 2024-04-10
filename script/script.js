@@ -114,10 +114,14 @@ function resetGame() {
 }
 
 function getPlayerName() {
-    return document.getElementById('playerNameInput').value;
+    let playerName = null;
+    while(!playerName) {
+        playerName = prompt("Bitte geben Sie Ihren Namen ein:");
+    }
+    return playerName;
 }
 
-function UpdateScoreBoard(){
+function updateScoreBoard(playerName){
     //Define Scoreboard entries
     let scoreBoards = [];
     let playerNames = [];
@@ -137,6 +141,7 @@ function UpdateScoreBoard(){
     //then take only the first five entries
     scores.sort((a, b) => b.score - a.score);
     scores = scores.slice(0, 5);
+    console.log(scores);
 
     //add the entries to the scoreboard, if entries exist - otherwise leave empty
     scoreBoards.forEach((scoreBoard, index) => {
@@ -491,19 +496,28 @@ function EShotMovement(enemyshot){
 //Points towards where the spritefiles are
 function loadImages(){
     if (gameStatus.lost){
-        document.getElementById('playerNameInput').style.display = 'block';
-        
-        let playerName = getPlayerName();
-        updateScoreBoard(playerName);
         setTimeout(() => {
             graphics.player.remove();
             graphics.backgroundImage.remove();
-            graphics = { player: null, background: null, gameOverScreen: new paper.Raster('img/GameOver.jpg') };
-            graphics.gameOverScreen.position = paper.view.center;
-            document.getElementById('scoredisplay').style.display = 'none';
+            Object.values(entities).forEach(array => {
+                array.forEach(entity => {
+                    entity.remove();
+                });
+            });
+            graphics = { player: null, background: null};
+            entities = { enemies1: [], enemies2: [], enemies3: [],shots: [], enemyshots: [], bosses: [] }
+
+            document.getElementById('playerNameInput').style.display = 'block';
+            playerName = getPlayerName();
+            updateScoreBoard(playerName);
             setTimeout(() => {
-                document.getElementById('scoreBoard').style.display = 'block';
-            }, 1000);
+                graphics.gameOverScreen = new paper.Raster('img/GameOver.jpg');
+                graphics.gameOverScreen.position = paper.view.center;
+                document.getElementById('scoredisplay').style.display = 'none';
+                setTimeout(() => {
+                    document.getElementById('scoreBoard').style.display = 'block';
+                }, 1000);
+            }, 500);
         }, 1000);
     }
     else{
