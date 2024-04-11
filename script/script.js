@@ -96,7 +96,8 @@ function startGame(){
     draw();
 }
 
-//support functions
+//support functions:
+
 function setAndStoreInterval(func, delay) {
     let id = setInterval(func, delay);
     timers.intervalIDs.push(id);
@@ -107,34 +108,59 @@ function randomIntFromInterval(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + Math.abs(min))
 }
 
+function removeEverything() {
+    graphics.player.remove();
+    graphics.backgroundImage.remove();
+    Object.keys(entities).forEach(key => {
+        entities[key].forEach(entity => {
+            entity.raster.remove();
+        });
+    });
+}
+
 function resetGame() {
-    entities = { enemies1: [], enemies2: [], enemies3: [], bosses: [] };
+    removeEverything();
+    graphics = { player: null, background: null};
+    entities = { enemies1: [], enemies2: [], enemies3: [], bosses: [], shots: [], enemyshots: [] };
     timers.intervalIDs.forEach(id => clearInterval(id));
     timers.intervalIDs = [];
 }
 
-function doScoreBoard(){
-    //Define Scoreboard elements
+function getPlayerName() {
+    let playerName = null;
+    while(!playerName) {
+        playerName = prompt("Bitte geben Sie Ihren Namen ein:");
+    }
+    return playerName;
+}
+
+function updateScoreBoard(playerName){
+    //Define Scoreboard entries
     let scoreBoards = [];
+    let playerNames = [];
     for (let i = 1; i <= 5; i++) {
         scoreBoards.push(document.getElementById('scoreBoardEntry' + i));
+        playerNames.push(document.getElementById('playerName' + i));
     }
 
     //Take existing entries from localStorage, if they exist - Otherwise place empty array
     let scores = JSON.parse(localStorage.getItem('scores')) || [];
 
     //add current score to scoreboard array and push the scores to localStorage
-    scores.push(gameStatus.score);
+    scores.push({ name: playerName, score: gameStatus.score });
     localStorage.setItem('scores', JSON.stringify(scores));
 
     //sort scores, highest to lowest
     //then take only the first five entries
-    scores.sort((a, b) => b - a);
+    scores.sort((a, b) => b.score - a.score);
     scores = scores.slice(0, 5);
 
     //add the entries to the scoreboard, if entries exist - otherwise leave empty
     scoreBoards.forEach((scoreBoard, index) => {
-        scoreBoard.innerHTML = scores[index] || '';
+        scoreBoard.innerHTML = scores[index] ? scores[index].score : '';
+    });
+    playerNames.forEach((playerName, index) => {
+        playerName.innerHTML = scores[index] ? scores[index].name + ':' : '';
     });
 }
 
@@ -162,9 +188,9 @@ function update(){
     entities.enemies3.forEach(enemy3Behaviour)
     //Logic for shot movement
     entities.shots.forEach(shot => {
-        shot.position.x += shotConfig.Speed;
-        if(shot.position.x > shotConfig.MaxX){
-            shot.remove();
+        shot.raster.position.x += shotConfig.Speed;
+        if(shot.raster.position.x > shotConfig.MaxX){
+            shot.raster.remove();
             entities.shots = entities.shots.filter(u => u != shot);
         }
     })
@@ -172,6 +198,7 @@ function update(){
 }
 
 //Hitbox logic, be careful with this. not even I rightly know how it works
+//BUG Some explosions are not scaled correctly. Presumably that bug is in here
 function testCollision(){
     //Player Hitbox
     let playerHitbox;
@@ -187,7 +214,7 @@ function testCollision(){
             gameStatus.lost = true;
         }
         entities.shots.forEach(function(shot){
-            let shotHitbox = shot.bounds;
+            let shotHitbox = shot.raster.bounds;
             if (shotHitbox.intersects(enemy1Hitbox)) {
                 if(!enemy1.hit){
                     gameStatus.score += 1;
@@ -195,7 +222,7 @@ function testCollision(){
                 enemy1.hit = true; 
                 enemy1.raster.source = 'img/Explosion.png';
                 entities.shots = entities.shots.filter(u => u != shot);
-                shot.remove();
+                shot.raster.remove();
                 entities.enemies1 = entities.enemies1.filter(u => u != enemy1);
                 setTimeout(() => {
                     enemy1.raster.remove();
@@ -212,7 +239,7 @@ function testCollision(){
             gameStatus.lost = true;
         }
         entities.shots.forEach(function(shot){
-            let shotHitbox = shot.bounds
+            let shotHitbox = shot.raster.bounds
             if (shotHitbox.intersects(enemy2Hitbox)) {
                 if(!enemy2.hit){
                     gameStatus.score += 2;
@@ -220,7 +247,7 @@ function testCollision(){
                 enemy2.hit = true;
                 enemy2.raster.source = 'img/Explosion.png';
                 entities.shots = entities.shots.filter(u => u != shot);
-                shot.remove();
+                shot.raster.remove();
                 entities.enemies2 = entities.enemies2.filter(u => u != enemy2);
                 setTimeout(() => {
                     enemy2.raster.remove()
@@ -237,7 +264,7 @@ function testCollision(){
             gameStatus.lost = true;
         }
         entities.shots.forEach(shot =>{
-            let shotHitbox = shot.bounds;
+            let shotHitbox = shot.raster.bounds;
             if (shotHitbox.intersects(enemy3Hitbox)) {
                 if(!enemy3.hit){
                     gameStatus.score += 3;
@@ -245,7 +272,7 @@ function testCollision(){
                 enemy3.hit = true;
                 enemy3.raster.source = 'img/Explosion.png';
                 entities.shots = entities.shots.filter(u => u != shot);
-                shot.remove();
+                shot.raster.remove();
                 setTimeout(() => {
                     entities.enemies3 = entities.enemies3.filter(u => u != enemy3);
                     enemy3.raster.remove();
@@ -253,11 +280,11 @@ function testCollision(){
         })
         //hitbox for enemy shots
         entities.enemyshots.forEach(enemyshot => {
-            let EShotHitbox = enemyshot.bounds;
+            let EShotHitbox = enemyshot.raster.bounds;
             if(playerHitbox.intersects(EShotHitbox)){
             graphics.player.source = 'img/Explosion.png';
             entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
-            enemyshot.remove();
+            enemyshot.raster.remove();
             gameStatus.lost = true;}
         })
     })
@@ -265,27 +292,25 @@ function testCollision(){
     entities.bosses.forEach(function(boss){
         let bossHitbox = boss.raster.bounds;
         entities.shots.forEach(function(shot){
-            let shotHitbox = shot.bounds;
+            let shotHitbox = shot.raster.bounds;
             if (bossHitbox.intersects(shotHitbox)) {
                 boss.bossHits++;
                 entities.shots = entities.shots.filter(u => u != shot);
-                shot.remove();
+                shot.raster.remove();
             }
         })
         //hitbox for enemy shots
         entities.enemyshots.forEach(function(enemyshot){
-            let EShotHitbox = enemyshot.bounds;
+            let EShotHitbox = enemyshot.raster.bounds;
             if(playerHitbox .intersects(EShotHitbox)){
                 graphics.player.source = 'img/Explosion.png';
                 entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
-                enemyshot.remove();
+                enemyshot.raster.remove();
                 gameStatus.lost = true;}
         })
     })
 }
 
-//BUG in very rare cases it is possible to give off two shots in quick succession.
-//This is probably due to interval rates. Never truly fixed.
 function shoot(){
     const minShotInterval = 500;
     let currentTime = new Date().getTime();
@@ -293,7 +318,8 @@ function shoot(){
         graphics.shot = new paper.Raster('img/YourLaser.png')
         graphics.shot.position = new paper.Point(graphics.player.position.x + 50, graphics.player.position.y);
         graphics.shot.scaling = new paper.Size(1, 1);
-        entities.shots.push(graphics.shot);
+        let shotEntity = { raster: graphics.shot };
+        entities.shots.push(shotEntity);
         hasFired = true;
         shotConfig.last = currentTime;
     }
@@ -335,7 +361,7 @@ function createEnemies1() {
 
 function createEnemies2() {
     if (timers.playtime >= 300 && !bossStatus.spawned) {
-        createEnemy(900, randomIntFromInterval(60, 420), 2, 2, 'img/EnemySpaceship2.png', entities.enemies2);
+        createEnemy(900, randomIntFromInterval(60, 420), 2, 2, 'img/EnemySpaceship2.png', entities.enemies2, {rerollTime: 0, zigzag: Math.random() < 0.5, zigzagHistory: []});
     }
 }
 
@@ -362,7 +388,7 @@ function spawnBoss() {
 
 
 
-//Movement behaviour for the enemies
+//behaviour for the enemies
 //Boss
 function bossBehaviour(boss){
     let bossRaster = boss.raster.position;
@@ -402,20 +428,38 @@ function enemy1Behaviour(enemy1){
 //second enemy
 function enemy2Behaviour(enemy2){
     if(!enemy2.hit){
-        let rerollTime = 0;
-        let zigzag = Math.random() < 0.5;
         enemy2.raster.position.x -= 5;
-        if(rerollTime > randomIntFromInterval(500, 1000)){
+        if(typeof enemy2.interval === 'undefined' || enemy2.rerollTime > enemy2.interval){
+            enemy2.interval = randomIntFromInterval(30, 60);
+            enemy2.zigzag = adjustZigzagBias(enemy2.zigzagHistory); // Reset zigzag
+            enemy2.rerollTime = 0; // Reset rerollTime
+        }
+
+        if (enemy2.zigzagHistory.length > 1) {
+            enemy2.zigzagHistory.shift(); // Remove oldest direction
+        }
+        enemy2.zigzagHistory.push(enemy2.zigzag); // Add new direction
+
+        if(enemy2.zigzag){
             enemy2.raster.position.y -= 3;
-            rerollTime++
-        }
-        if(!zigzag && rerollTime < randomIntFromInterval(500, 1000)){
+        } else {
             enemy2.raster.position.y += 3;
-            rerollTime++;
         }
+        enemy2.rerollTime++;
     }
     entities.enemies2 = removeEntity(enemy2, entities.enemies2);
 }
+
+function adjustZigzagBias(zigzagHistory) {
+    if (zigzagHistory.length < 2 || zigzagHistory[0] !== zigzagHistory[1]) {
+        // If less than 2 history or last two directions were not the same, no bias
+        return Math.random() < 0.5;
+    } else {
+        // If last two directions were the same, bias against same direction
+        return zigzagHistory[0] ? Math.random() < 0.25 : Math.random() >= 0.25;
+    }
+}
+
 //third enemy
 function enemy3Behaviour(enemy3){
     let enemy3Position = enemy3.raster.position;
@@ -451,7 +495,8 @@ function enemy3Shoots(){
                 let enemyShot = new paper.Raster('img/EnemyLaser.png')
                 enemyShot.position = new paper.Point(enemy3Position.x - 20, enemy3Position.y + 20);
                 enemyShot.size = new paper.Size(29, 10);
-                entities.enemyshots.push(enemyShot);
+                let shotEntity = {raster: enemyShot}
+                entities.enemyshots.push(shotEntity);
             }
         })
     }
@@ -465,34 +510,34 @@ function bossShoots(){
                 let enemyShot = new paper.Raster('img/EnemyLaser.png')
                 enemyShot.position = new paper.Point(bossPosition.x - 50, bossPosition.y + 15);
                 enemyShot.size = new paper.Size(29, 10);
-                entities.enemyshots.push(enemyShot);
+                let shotEntity = {raster: enemyShot};
+                entities.enemyshots.push(shotEntity);
             }
         })
     }
 }
 
 function EShotMovement(enemyshot){
-    enemyshot.position.x -= 5;
-    if(enemyshot.position.x < -10){
+    enemyshot.raster.position.x -= 5;
+    if(enemyshot.raster.position.x < -10){
         entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
-        enemyshot.remove();
+        enemyshot.raster.remove();
     }
 }
 
 //Points towards where the spritefiles are
 function loadImages(){
     if (gameStatus.lost){
-        doScoreBoard();
         setTimeout(() => {
-            graphics.player.remove();
-            graphics.backgroundImage.remove();
-            graphics = { player: null, background: null, gameOverScreen: new paper.Raster('img/GameOver.jpg') };
+            let playerName = getPlayerName();
+            updateScoreBoard(playerName);
+            graphics.gameOverScreen = new paper.Raster('img/GameOver.jpg');
             graphics.gameOverScreen.position = paper.view.center;
             document.getElementById('scoredisplay').style.display = 'none';
             setTimeout(() => {
                 document.getElementById('scoreBoard').style.display = 'block';
             }, 1000);
-        }, 1000);
+        }, 500);
     }
     else{
     graphics.backgroundImage = new paper.Raster('img/background.jpg');
@@ -506,8 +551,10 @@ function loadImages(){
 //Generates the Gamescreen
 function draw(){
     if (gameStatus.lost){
-        resetGame();
-        loadImages();
+        setTimeout(() => {
+            resetGame();
+            loadImages();
+        }, 1000);
     }
     else{
     paper.view.update();
