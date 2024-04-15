@@ -1,70 +1,44 @@
-//movement logic
-const keys = {space: false, up: false, down: false};
-const playerBounds = {maxY: 420, minY: 60};
-const shotConfig = {MaxX: 880, Speed: 7, last: 0};
+//Game Configuration
+const config = {
+    keys: {space: false, up: false, down: false},
+    playerBounds: {maxY: 420, minY: 60},
+    shot: {MaxX: 880, Speed: 7, last: 0},
+    keyCodes: {space: ' ', up: 'ArrowUp', down: 'ArrowDown'}
+};
 
+//Game Status
+let gamestate = {
+    game: {hasFired: false, lost: false, score: 0},
+    boss: {timeSince: 0, spawns: 0, spawned: false, first: false},
+    timers: {intervalIDs: [], playtime: 0, age: 0}
+};
 
-let gameStatus = {hasFired: false, lost: false, score: 0};
-
-//Logic variables for bosses
-let bossStatus = {
-    timeSince: 0,
-    spawns: 0,
-    spawned: false,
-    first: false };
-
-//Graphic/logic variables
+//Background Graphics
 let graphics = {
     backgroundImage: undefined,
     gameOverScreen: undefined,
-    player: undefined,
-    shot: undefined
 }
 
-//Calculation Variables
+//Anything that moves
 let entities = {
-    enemies1: [],
-    enemies2: [],
-    enemies3: [],
+    player: undefined,
+    shot: undefined,
+    enemies: [[], [], []],
     shots: [],
     enemyshots: [],
     bosses: []
 }
 
-//timers
-let timers = {
-    intervalIDs: [],
-    playtime: 0, //for determining boss spawns
-    age: 0 //for later calculations relating to third enemy
-}
-
-//Button-Logic
-const keyCodes = {
-    space: ' ',
-    up: 'ArrowUp',
-    down: 'ArrowDown'
-}
-
+// Update key state
 function updateKeyState(e, state) {
-    switch(e.key) {
-        case keyCodes.space: // Space
-            keys.space = state;
-            break;
-        case keyCodes.up: // Up
-            keys.up = state;
-            break;
-        case keyCodes.down: // Down
-            keys.down = state;
-            break;
+    if (Object.keys(config.keyCodes).includes(e.key)) {
+        config.keys[e.key] = state;
     }
 }
 
-document.addEventListener('keydown', function(e) {
-    updateKeyState(e, true);
-});
-
-document.addEventListener('keyup', function(e) {
-    updateKeyState(e, false);
+// Event listeners for keydown and keyup
+['keydown', 'keyup'].forEach(event => {
+    document.addEventListener(event, e => updateKeyState(e, event === 'keydown'));
 });
 
 //initializes upon loading the site
@@ -96,11 +70,9 @@ function startGame(){
     draw();
 }
 
-//support functions:
-
+//support functions
 function setAndStoreInterval(func, delay) {
-    let id = setInterval(func, delay);
-    timers.intervalIDs.push(id);
+    gamestate.timers.intervalIDs.push(setInterval(func, delay));
 }
 
 //generate random integer between min and max
@@ -109,21 +81,18 @@ function randomIntFromInterval(min, max) {
 }
 
 function removeEverything() {
-    graphics.player.remove();
-    graphics.backgroundImage.remove();
-    Object.keys(entities).forEach(key => {
-        entities[key].forEach(entity => {
-            entity.raster.remove();
-        });
+    Object.values(graphics).forEach(graphic => graphic && graphic.remove());
+    Object.values(entities).forEach(entityArray => {
+        entityArray.forEach(entity => entity.raster && entity.raster.remove());
     });
 }
 
 function resetGame() {
     removeEverything();
-    graphics = { player: null, background: null};
-    entities = { enemies1: [], enemies2: [], enemies3: [], bosses: [], shots: [], enemyshots: [] };
-    timers.intervalIDs.forEach(id => clearInterval(id));
-    timers.intervalIDs = [];
+    graphics = { background: null};
+    entities = { player: null, enemies: [[], [], []], bosses: [], shots: [], enemyshots: [] };
+    gamestate.timers.intervalIDs.forEach(id => clearInterval(id));
+    gamestate.timers.intervalIDs = [];
 }
 
 function getPlayerName() {
@@ -136,18 +105,14 @@ function getPlayerName() {
 
 function updateScoreBoard(playerName){
     //Define Scoreboard entries
-    let scoreBoards = [];
-    let playerNames = [];
-    for (let i = 1; i <= 5; i++) {
-        scoreBoards.push(document.getElementById('scoreBoardEntry' + i));
-        playerNames.push(document.getElementById('playerName' + i));
-    }
+    let scoreBoards = Array.from({length: 5}, (_, i) => document.getElementById('scoreBoardEntry' + (i + 1)));
+    let playerNames = Array.from({length: 5}, (_, i) => document.getElementById('playerName' + (i + 1)));
 
     //Take existing entries from localStorage, if they exist - Otherwise place empty array
     let scores = JSON.parse(localStorage.getItem('scores')) || [];
 
     //add current score to scoreboard array and push the scores to localStorage
-    scores.push({ name: playerName, score: gameStatus.score });
+    scores.push({ name: playerName, score: gamestate.game.score });
     localStorage.setItem('scores', JSON.stringify(scores));
 
     //sort scores, highest to lowest
@@ -160,40 +125,38 @@ function updateScoreBoard(playerName){
         scoreBoard.innerHTML = scores[index] ? scores[index].score : '';
     });
     playerNames.forEach((playerName, index) => {
-        playerName.innerHTML = scores[index] ? scores[index].name + ':' : '';
+        playerName.innerHTML = scores[index] ? scores[index].name + ' : ' : '';
     });
 }
 
 //Game update
 function update(){
-    timers.playtime++;
-    if(keys.down && graphics.player.position.y <= playerBounds.maxY){
-        graphics.player.position.y += 4;
+    gamestate.timers.playtime++;
+    if(config.keys.down && entities.player.position.y <= config.playerBounds.maxY){
+        entities.player.position.y += 4;
     }
-    if(keys.up && graphics.player.position.y >= playerBounds.minY){
-        graphics.player.position.y -= 4;
+    if(config.keys.up && entities.player.position.y >= config.playerBounds.minY){
+        entities.player.position.y -= 4;
     }
-    if(!bossStatus.spawned){
-        bossStatus.timeSince++;
+    if(!gamestate.boss.spawned){
+        gamestate.boss.timeSince++;
     }
 
-    document.getElementById("score").innerHTML = gameStatus.score;
+    document.getElementById("score").innerHTML = gamestate.game.score;
     //boss-behaviour
     entities.bosses.forEach(bossBehaviour)
     //Behaviour of first enemy
-    entities.enemies1.forEach(enemy1Behaviour)
-    //Behaviour of second enemy
-    entities.enemies2.forEach(enemy2Behaviour)
-    //behaviour of third enemy
-    entities.enemies3.forEach(enemy3Behaviour)
+    entities.enemies.forEach((enemyType, index) => {
+        enemyType.forEach(window['enemy' + (index + 1) + 'Behaviour']);
+    });
     //Logic for shot movement
     entities.shots.forEach(shot => {
-        shot.raster.position.x += shotConfig.Speed;
-        if(shot.raster.position.x > shotConfig.MaxX){
+        shot.raster.position.x += config.shot.Speed;
+        if(shot.raster.position.x > config.shot.MaxX){
             shot.raster.remove();
             entities.shots = entities.shots.filter(u => u != shot);
         }
-    })
+    });
     entities.enemyshots.forEach(EShotMovement)
 }
 
@@ -201,151 +164,90 @@ function update(){
 //BUG Some explosions are not scaled correctly. Presumably that bug is in here
 function testCollision(){
     //Player Hitbox
-    let playerHitbox;
-    if (graphics.player){playerHitbox = graphics.player.bounds;}
-    //Hitbox for the first enemy type
-    entities.enemies1.forEach(function(enemy1){
-        let enemy1Hitbox = enemy1.raster.bounds;
-        
-        if(graphics.player && playerHitbox.intersects(enemy1Hitbox)){
-            graphics.player.source = 'img/Explosion.png';
-            enemy1.raster.remove();
-            entities.enemies1 = entities.enemies1.filter(u => u != enemy1);
-            gameStatus.lost = true;
+    let playerHitbox = entities.player && entities.player.bounds;
+
+    // Function to handle collision with enemy
+    function handleCollision(entity, entityIndex, entitiesArray, scoreIncrement, isBoss = false) {
+        let entityHitbox = entity.raster.bounds;
+
+        if (playerHitbox && playerHitbox.intersects(entityHitbox)) {
+            entities.player.source = 'img/Explosion.png';
+            enemy.raster.remove();
+            gamestate.game.lost = true;
         }
-        entities.shots.forEach(function(shot){
+
+        entities.shots.forEach(shot => {
             let shotHitbox = shot.raster.bounds;
-            if (shotHitbox.intersects(enemy1Hitbox)) {
-                if(!enemy1.hit){
-                    gameStatus.score += 1;
+            if (shotHitbox.intersects(enemyHitbox)) {
+                if (!enemy.hit) {
+                    gamestate.game.score += scoreIncrement;
                 }
-                enemy1.hit = true; 
-                enemy1.raster.source = 'img/Explosion.png';
-                entities.shots = entities.shots.filter(u => u != shot);
+                enemy.hit = true;
+                enemy.raster.source = 'img/Explosion.png';
                 shot.raster.remove();
-                entities.enemies1 = entities.enemies1.filter(u => u != enemy1);
-                setTimeout(() => {
-                    enemy1.raster.remove();
-                }, 500);}
-        })
-    });
-    //Hitbox for the second enemy type
-    entities.enemies2.forEach(function(enemy2){
-        let enemy2Hitbox = enemy2.raster.bounds
-        if(graphics.player && playerHitbox.intersects(enemy2Hitbox)){
-            graphics.player.source = 'img/Explosion.png';
-            enemy2.raster.remove();
-            entities.enemies2 = entities.enemies2.filter(u => u != enemy2);
-            gameStatus.lost = true;
-        }
-        entities.shots.forEach(function(shot){
-            let shotHitbox = shot.raster.bounds
-            if (shotHitbox.intersects(enemy2Hitbox)) {
-                if(!enemy2.hit){
-                    gameStatus.score += 2;
-                }
-                enemy2.hit = true;
-                enemy2.raster.source = 'img/Explosion.png';
-                entities.shots = entities.shots.filter(u => u != shot);
-                shot.raster.remove();
-                entities.enemies2 = entities.enemies2.filter(u => u != enemy2);
-                setTimeout(() => {
-                    enemy2.raster.remove()
-                }, 500);}
-        })
-    })
-    //Hitbox for The third enemy type
-    entities.enemies3.forEach(function(enemy3){
-        let enemy3Hitbox = enemy3.raster.bounds;
-        if(playerHitbox.intersects(enemy3Hitbox)){
-            graphics.player.source = 'img/Explosion.png';
-            entities.enemies3 = entities.enemies3.filter(u => u != enemy3);
-            enemy3.raster.remove();
-            gameStatus.lost = true;
-        }
-        entities.shots.forEach(shot =>{
-            let shotHitbox = shot.raster.bounds;
-            if (shotHitbox.intersects(enemy3Hitbox)) {
-                if(!enemy3.hit){
-                    gameStatus.score += 3;
-                }
-                enemy3.hit = true;
-                enemy3.raster.source = 'img/Explosion.png';
-                entities.shots = entities.shots.filter(u => u != shot);
-                shot.raster.remove();
-                setTimeout(() => {
-                    entities.enemies3 = entities.enemies3.filter(u => u != enemy3);
-                    enemy3.raster.remove();
-                }, 500);}
-        })
-        //hitbox for enemy shots
-        entities.enemyshots.forEach(enemyshot => {
-            let EShotHitbox = enemyshot.raster.bounds;
-            if(playerHitbox.intersects(EShotHitbox)){
-            graphics.player.source = 'img/Explosion.png';
-            entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
-            enemyshot.raster.remove();
-            gameStatus.lost = true;}
-        })
-    })
-    // Hitbox for the boss
-    entities.bosses.forEach(function(boss){
-        let bossHitbox = boss.raster.bounds;
-        entities.shots.forEach(function(shot){
-            let shotHitbox = shot.raster.bounds;
-            if (bossHitbox.intersects(shotHitbox)) {
-                boss.bossHits++;
-                entities.shots = entities.shots.filter(u => u != shot);
-                shot.raster.remove();
+                setTimeout(() => enemy.raster.remove(), 500);
             }
-        })
-        //hitbox for enemy shots
-        entities.enemyshots.forEach(function(enemyshot){
-            let EShotHitbox = enemyshot.raster.bounds;
-            if(playerHitbox .intersects(EShotHitbox)){
-                graphics.player.source = 'img/Explosion.png';
-                entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
-                enemyshot.raster.remove();
-                gameStatus.lost = true;}
-        })
-    })
+        });
+
+        if (entity.hit) {
+            entitiesArray.splice(entityIndex, 1);
+            entities.shots = entities.shots.filter(shot => !shot.raster.bounds.intersects(entityHitbox));
+        }
+
+        // Additional logic for bosses
+        if (isBoss && entityHitbox.intersects(shotHitbox)) {
+            entity.bossHits++;
+        }
+    }
+
+    // Check collisions for each type of enemy
+    entities.enemies.forEach((enemies, index) => {
+        enemies.forEach((enemy, enemyIndex) => handleCollision(enemy, enemyIndex, enemies, index + 1));
+    });
+
+    // Check collisions for bosses
+    entities.bosses.forEach((boss, bossIndex) => handleCollision(boss, bossIndex, entities.bosses, 0, true));
+
+    // Check collisions for enemy shots
+    entities.enemyshots.forEach((enemyshot, shotIndex) => {
+        if (playerHitbox && playerHitbox.intersects(enemyshot.raster.bounds)) {
+            graphics.player.source = 'img/Explosion.png';
+            gamestate.game.lost = true;
+            enemyshot.raster.remove();
+            entities.enemyshots.splice(shotIndex, 1);
+        }
+    });
 }
 
-function shoot(){
+function shoot() {
     const minShotInterval = 500;
     let currentTime = new Date().getTime();
-    if(keys.space && !gameStatus.hasFired && currentTime - shotConfig.last > minShotInterval){
-        graphics.shot = new paper.Raster('img/YourLaser.png')
-        graphics.shot.position = new paper.Point(graphics.player.position.x + 50, graphics.player.position.y);
-        graphics.shot.scaling = new paper.Size(1, 1);
-        let shotEntity = { raster: graphics.shot };
-        entities.shots.push(shotEntity);
-        hasFired = true;
-        shotConfig.last = currentTime;
+    if (config.keys.space && !gamestate.game.hasFired && currentTime - config.shot.last > minShotInterval) {
+        entities.shot = new paper.Raster('img/YourLaser.png');
+        entities.shot.position = new paper.Point(entities.player.position.x + 50, entities.player.position.y);
+        entities.shot.scaling = new paper.Size(1, 1);
+        entities.shots.push({ raster: entities.shot });
+        gamestate.game.hasFired = true;
+        config.shot.last = currentTime;
     }
 }
 
 //XXX Possibly unnecessary. Remove if so.
-function refillAmmo(){
-    gameStatus.hasFired = false;
+function refillAmmo() {
+    gamestate.game.hasFired = false;
 }
 
 //Making enemies appear
 function createEnemy(x, y, width, height, img, array, additionalproperties = {}) {
-    let raster = new paper.Raster(img)
+    let raster = new paper.Raster(img);
     raster.position = new paper.Point(x, y);
     raster.scaling = new paper.Size(width, height);
-    let enemy = {
-        raster: raster,
-        hit: false,
-        ...additionalproperties
-    }
-    array.push(enemy);
+    array.push({ raster: raster, hit: false, ...additionalproperties });
 }
 
 //making enemies disappear
-function removeEntity(entity, entityarray){
-    if (entity.raster.position.x < -25 || entity.raster.position.y < -20 || entity.raster.position.y > 500){
+function removeEntity(entity, entityarray) {
+    if (entity.raster.position.x < -25 || entity.raster.position.y < -20 || entity.raster.position.y > 500) {
         entity.raster.remove();
         return entityarray.filter(u => u != entity);
     }
@@ -354,36 +256,36 @@ function removeEntity(entity, entityarray){
 
 //Defining enemy properties
 function createEnemies1() {
-    if (!bossStatus.spawned) {
-        createEnemy(900, randomIntFromInterval(60, 420), 4, 2.5, 'img/EnemySpaceship1.png', entities.enemies1);
+    if (!gamestate.boss.spawned) {
+        createEnemy(900, randomIntFromInterval(60, 420), 4, 2.5, 'img/EnemySpaceship1.png', entities.enemies[0]);
     }
 }
 
 function createEnemies2() {
-    if (timers.playtime >= 300 && !bossStatus.spawned) {
-        createEnemy(900, randomIntFromInterval(60, 420), 2, 2, 'img/EnemySpaceship2.png', entities.enemies2, {rerollTime: 0, zigzag: Math.random() < 0.5, zigzagHistory: []});
+    if (gamestate.timers.playtime >= 300 && !gamestate.boss.spawned) {
+        createEnemy(900, randomIntFromInterval(60, 420), 2, 2, 'img/EnemySpaceship2.png', entities.enemies[1], {rerollTime: 0, zigzag: Math.random() < 0.5, zigzagHistory: []});
     }
 }
 
 function createEnemies3() {
-    if (timers.playtime >= 600 && entities.enemies3.length < 2 && !bossStatus.spawned) {
-        createEnemy(900, randomIntFromInterval(60, 420), 2.5, 2.5, 'img/EnemySpaceship3.png', entities.enemies3, { age: 0, direction: null, initial: false });
+    if (gamestate.timers.playtime >= 600 && entities.enemies3.length < 2 && !gamestate.boss.spawned) {
+        createEnemy(900, randomIntFromInterval(60, 420), 2.5, 2.5, 'img/EnemySpaceship3.png', entities.enemies[2], { age: 0, direction: null, initial: false });
     }
 }
 
 function spawnBoss() {
-    if (timers.playtime >= 1500 && !bossStatus.first) {
+    if (gamestate.timers.playtime >= 1500 && !gamestate.boss.first) {
         createEnemy(900, 250, 3, 3, 'img/Boss.png', entities.bosses, { bossHits: 0, direction: null }); 
         setInterval(createEnemies1, 3000);
         setInterval(createEnemies2, 2000);
         setInterval(createEnemies3, 1000);
         bossStatus.spawned = true;
         bossStatus.first = true;
-    } else if (timers.playtime >= 2000 && bossStatus.timeSince >= 1500 && entities.bosses.length < 1) {
+    } else if (gamestate.timers.playtime >= 2000 && gamestate.boss.timeSince >= 1500 && entities.bosses.length < 1) {
         createEnemy(900, 200, 100, 75, 'img/Boss.png', entities.bosses, { bossHits: 0, direction: null });
         bossStatus.spawned = true;
     }
-    timeSinceLastBoss = 0;
+    gamestate.boss.timeSince = 0;
 }
 
 
