@@ -16,7 +16,7 @@ let gamestate = {
 //Background Graphics
 let graphics = {
     backgroundImage: undefined,
-    gameOverScreen: undefined,
+    gameOverScreen: undefined
 }
 
 //Anything that moves
@@ -310,7 +310,7 @@ function bossBehaviour(boss){
     }
     if(boss.bossHits >= 3){
         if(bossStatus.spawned == true){
-            gameStatus.score += 5;
+            gamestate.game.score += 5;
         }
         bossStatus.spawned = false;
         boss.raster.source = 'img/Explosion.png';
@@ -325,7 +325,7 @@ function enemy1Behaviour(enemy1){
     if(!enemy1.hit){
         enemy1.raster.position.x -= 3;
     }
-    entities.enemies1 = removeEntity(enemy1, entities.enemies1);
+    entities.enemies[0] = removeEntity(enemy1, entities.enemies[0]);
 }
 //second enemy
 function enemy2Behaviour(enemy2){
@@ -349,7 +349,7 @@ function enemy2Behaviour(enemy2){
         }
         enemy2.rerollTime++;
     }
-    entities.enemies2 = removeEntity(enemy2, entities.enemies2);
+    entities.enemies[1] = removeEntity(enemy2, entities.enemies[1]);
 }
 
 function adjustZigzagBias(zigzagHistory) {
@@ -386,12 +386,12 @@ function enemy3Behaviour(enemy3){
         }   
         enemy3.age++;
     }
-    entities.enemies3 = removeEntity(enemy3, entities.enemies3)
+    entities.enemies[2] = removeEntity(enemy3, entities.enemies[2])
 }
 //Logic for enemy attacks
 function enemy3Shoots(){
     if(!bossStatus.spawned){
-        entities.enemies3.forEach(function(enemy3){
+        entities.enemies[2].forEach(function(enemy3){
             let enemy3Position = enemy3.raster.position;
             if(!enemy3.hit && enemy3Position.x == 780){
                 let enemyShot = new paper.Raster('img/EnemyLaser.png')
@@ -429,7 +429,7 @@ function EShotMovement(enemyshot){
 
 //Points towards where the spritefiles are
 function loadImages(){
-    if (gameStatus.lost){
+    if (gamestate.game.lost){
         setTimeout(() => {
             let playerName = getPlayerName();
             updateScoreBoard(playerName);
@@ -444,9 +444,9 @@ function loadImages(){
     else{
     graphics.backgroundImage = new paper.Raster('img/background.jpg');
     graphics.backgroundImage.position = paper.view.center
-    graphics.player = new paper.Raster('img/PlayerSpaceship.png');
-    graphics.player.position = new paper.Point(100, 250);
-    graphics.player.scaling = new paper.Size(2.5, 2.3);
+    entities.player = new paper.Raster('img/PlayerSpaceship.png');
+    entities.player.position = new paper.Point(100, 250);
+    entities.player.scaling = new paper.Size(2.5, 2.3);
     }
 }
 
