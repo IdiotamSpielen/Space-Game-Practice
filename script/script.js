@@ -30,15 +30,29 @@ let entities = {
 }
 
 // Update key state
+//This is stupid, but any other approach just refuses to work
 function updateKeyState(e, state) {
-    if (Object.keys(config.keyCodes).includes(e.key)) {
-        config.keys[e.key] = state;
+    switch(e.key) {
+        case config.keyCodes.space: // Space
+            config.keys.space = state;
+            break;
+        case config.keyCodes.up: // Up
+            config.keys.up = state;
+            break;
+        case config.keyCodes.down: // Down
+            config.keys.down = state;
+            break;
     }
 }
 
-// Event listeners for keydown and keyup
-['keydown', 'keyup'].forEach(event => {
-    document.addEventListener(event, e => updateKeyState(e, event === 'keydown'));
+
+//adding listeners for keys
+document.addEventListener('keydown', function(e) {
+    updateKeyState(e, true);
+});
+
+document.addEventListener('keyup', function(e) {
+    updateKeyState(e, false);
 });
 
 //initializes upon loading the site
@@ -164,59 +178,114 @@ function update(){
 //BUG Some explosions are not scaled correctly. Presumably that bug is in here
 function testCollision(){
     //Player Hitbox
-    let playerHitbox = entities.player && entities.player.bounds;
-
-    // Function to handle collision with enemy
-    function handleCollision(entity, entityIndex, entitiesArray, scoreIncrement, isBoss = false) {
-        let entityHitbox = entity.raster.bounds;
-
-        if (playerHitbox && playerHitbox.intersects(entityHitbox)) {
+    let playerHitbox;
+    if (entities.player){playerHitbox = entities.player.bounds;}
+    //Hitbox for the first enemy type
+    entities.enemies[0].forEach(function(enemy1){
+        let enemy1Hitbox = enemy1.raster.bounds;
+        
+        if(entities.player && playerHitbox.intersects(enemy1Hitbox)){
             entities.player.source = 'img/Explosion.png';
-            enemy.raster.remove();
+            enemy1.raster.remove();
+            entities.enemies[0] = entities.enemies[0].filter(u => u != enemy1);
             gamestate.game.lost = true;
         }
-
-        entities.shots.forEach(shot => {
+        entities.shots.forEach(function(shot){
             let shotHitbox = shot.raster.bounds;
-            if (shotHitbox.intersects(enemyHitbox)) {
-                if (!enemy.hit) {
-                    gamestate.game.score += scoreIncrement;
+            if (shotHitbox.intersects(enemy1Hitbox)) {
+                if(!enemy1.hit){
+                    gamestate.game.score += 1;
                 }
-                enemy.hit = true;
-                enemy.raster.source = 'img/Explosion.png';
+                enemy1.hit = true; 
+                enemy1.raster.source = 'img/Explosion.png';
+                entities.shots = entities.shots.filter(u => u != shot);
                 shot.raster.remove();
-                setTimeout(() => enemy.raster.remove(), 500);
-            }
-        });
-
-        if (entity.hit) {
-            entitiesArray.splice(entityIndex, 1);
-            entities.shots = entities.shots.filter(shot => !shot.raster.bounds.intersects(entityHitbox));
-        }
-
-        // Additional logic for bosses
-        if (isBoss && entityHitbox.intersects(shotHitbox)) {
-            entity.bossHits++;
-        }
-    }
-
-    // Check collisions for each type of enemy
-    entities.enemies.forEach((enemies, index) => {
-        enemies.forEach((enemy, enemyIndex) => handleCollision(enemy, enemyIndex, enemies, index + 1));
+                entities.enemies[0] = entities.enemies[0].filter(u => u != enemy1);
+                setTimeout(() => {
+                    enemy1.raster.remove();
+                }, 500);}
+        })
     });
-
-    // Check collisions for bosses
-    entities.bosses.forEach((boss, bossIndex) => handleCollision(boss, bossIndex, entities.bosses, 0, true));
-
-    // Check collisions for enemy shots
-    entities.enemyshots.forEach((enemyshot, shotIndex) => {
-        if (playerHitbox && playerHitbox.intersects(enemyshot.raster.bounds)) {
-            graphics.player.source = 'img/Explosion.png';
+    //Hitbox for the second enemy type
+    entities.enemies[1].forEach(function(enemy2){
+        let enemy2Hitbox = enemy2.raster.bounds
+        if(entities.player && playerHitbox.intersects(enemy2Hitbox)){
+            entities.player.source = 'img/Explosion.png';
+            enemy2.raster.remove();
+            entities.enemies[1] = entities.enemies[1].filter(u => u != enemy2);
             gamestate.game.lost = true;
-            enemyshot.raster.remove();
-            entities.enemyshots.splice(shotIndex, 1);
         }
-    });
+        entities.shots.forEach(function(shot){
+            let shotHitbox = shot.raster.bounds
+            if (shotHitbox.intersects(enemy2Hitbox)) {
+                if(!enemy2.hit){
+                    gamestate.game.score += 2;
+                }
+                enemy2.hit = true;
+                enemy2.raster.source = 'img/Explosion.png';
+                entities.shots = entities.shots.filter(u => u != shot);
+                shot.raster.remove();
+                entities.enemies[1] = entities.enemies[1].filter(u => u != enemy2);
+                setTimeout(() => {
+                    enemy2.raster.remove()
+                }, 500);}
+        })
+    })
+    //Hitbox for The third enemy type
+    entities.enemies[2].forEach(function(enemy3){
+        let enemy3Hitbox = enemy3.raster.bounds;
+        if(playerHitbox.intersects(enemy3Hitbox)){
+            entities.player.source = 'img/Explosion.png';
+            entities.enemies[2] = entities.enemies[2].filter(u => u != enemy3);
+            enemy3.raster.remove();
+            gamestate.game.lost = true;
+        }
+        entities.shots.forEach(shot =>{
+            let shotHitbox = shot.raster.bounds;
+            if (shotHitbox.intersects(enemy3Hitbox)) {
+                if(!enemy3.hit){
+                    gamestate.game.score += 3;
+                }
+                enemy3.hit = true;
+                enemy3.raster.source = 'img/Explosion.png';
+                entities.shots = entities.shots.filter(u => u != shot);
+                shot.raster.remove();
+                setTimeout(() => {
+                    entities.enemies[2] = entities.enemies[2].filter(u => u != enemy3);
+                    enemy3.raster.remove();
+                }, 500);}
+        })
+        //hitbox for enemy shots
+        entities.enemyshots.forEach(enemyshot => {
+            let EShotHitbox = enemyshot.raster.bounds;
+            if(playerHitbox.intersects(EShotHitbox)){
+            entities.player.source = 'img/Explosion.png';
+            entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
+            enemyshot.raster.remove();
+            gamestate.game.lost = true;}
+        })
+    })
+    // Hitbox for the boss
+    entities.bosses.forEach(function(boss){
+        let bossHitbox = boss.raster.bounds;
+        entities.shots.forEach(function(shot){
+            let shotHitbox = shot.raster.bounds;
+            if (bossHitbox.intersects(shotHitbox)) {
+                boss.bossHits++;
+                entities.shots = entities.shots.filter(u => u != shot);
+                shot.raster.remove();
+            }
+        })
+        //hitbox for enemy shots
+        entities.enemyshots.forEach(function(enemyshot){
+            let EShotHitbox = enemyshot.raster.bounds;
+            if(playerHitbox .intersects(EShotHitbox)){
+                entities.player.source = 'img/Explosion.png';
+                entities.enemyshots = entities.enemyshots.filter(u => u != enemyshot);
+                enemyshot.raster.remove();
+                gamestate.game.lost = true;}
+        })
+    })
 }
 
 function shoot() {
@@ -268,7 +337,7 @@ function createEnemies2() {
 }
 
 function createEnemies3() {
-    if (gamestate.timers.playtime >= 600 && entities.enemies3.length < 2 && !gamestate.boss.spawned) {
+    if (gamestate.timers.playtime >= 600 && entities.enemies[2].length < 2 && !gamestate.boss.spawned) {
         createEnemy(900, randomIntFromInterval(60, 420), 2.5, 2.5, 'img/EnemySpaceship3.png', entities.enemies[2], { age: 0, direction: null, initial: false });
     }
 }
@@ -279,11 +348,11 @@ function spawnBoss() {
         setInterval(createEnemies1, 3000);
         setInterval(createEnemies2, 2000);
         setInterval(createEnemies3, 1000);
-        bossStatus.spawned = true;
-        bossStatus.first = true;
+        gamestate.boss.spawned = true;
+        gamestate.boss.first = true;
     } else if (gamestate.timers.playtime >= 2000 && gamestate.boss.timeSince >= 1500 && entities.bosses.length < 1) {
         createEnemy(900, 200, 100, 75, 'img/Boss.png', entities.bosses, { bossHits: 0, direction: null });
-        bossStatus.spawned = true;
+        gamestate.boss.spawned = true;
     }
     gamestate.boss.timeSince = 0;
 }
@@ -296,7 +365,7 @@ function bossBehaviour(boss){
     let bossRaster = boss.raster.position;
     if(bossRaster.x > 750){
         bossRaster.x -= 3;
-        bossStatus.spawned = true;
+        gamestate.boss.spawned = true;
     }
     else{
         if(bossRaster.y <= 60 || (boss.direction && bossRaster.y < 420)){
@@ -309,10 +378,10 @@ function bossBehaviour(boss){
         }
     }
     if(boss.bossHits >= 3){
-        if(bossStatus.spawned == true){
+        if(gamestate.boss.spawned == true){
             gamestate.game.score += 5;
         }
-        bossStatus.spawned = false;
+        gamestate.boss.spawned = false;
         boss.raster.source = 'img/Explosion.png';
         setTimeout(() => {
             boss.raster.remove();
@@ -370,7 +439,7 @@ function enemy3Behaviour(enemy3){
         enemy3.initial = true;
     }
     if(!enemy3.hit){
-        if(bossStatus.spawned || enemy3.age >= 400){
+        if(gamestate.boss.spawned || enemy3.age >= 400){
             enemy3Position.x -= 6;
         }
         else if (enemy3.age < 400 && enemy3Position.x > 780){
@@ -390,7 +459,7 @@ function enemy3Behaviour(enemy3){
 }
 //Logic for enemy attacks
 function enemy3Shoots(){
-    if(!bossStatus.spawned){
+    if(!gamestate.boss.spawned){
         entities.enemies[2].forEach(function(enemy3){
             let enemy3Position = enemy3.raster.position;
             if(!enemy3.hit && enemy3Position.x == 780){
@@ -405,7 +474,7 @@ function enemy3Shoots(){
 }
 
 function bossShoots(){
-    if(bossStatus.spawned){
+    if(gamestate.boss.spawned){
         entities.bosses.forEach(function(boss){
             let bossPosition = boss.raster.position;
             if (bossPosition.x <= 750){
@@ -452,7 +521,7 @@ function loadImages(){
 
 //Generates the Gamescreen
 function draw(){
-    if (gameStatus.lost){
+    if (gamestate.game.lost){
         setTimeout(() => {
             resetGame();
             loadImages();
